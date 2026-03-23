@@ -1,4 +1,4 @@
-import { html, nothing } from "lit";
+import { html } from "lit";
 
 export type Task = {
   id: string;
