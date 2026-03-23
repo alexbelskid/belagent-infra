@@ -5,23 +5,48 @@
 | **Домен** | https://grigory.belagent.com |
 | **VPS** | 89.167.22.91 (Hetzner) |
 | **OpenClaw port** | 19789 |
-| **Email** | lisitskigrigory@gmail.com |
+| **Email (CF Access)** | lisitskigrigory@gmail.com |
 | **Cloudflare Tunnel ID** | 74bc9f50-fed6-4af1-89c6-942ee7639177 |
 | **CF Access App ID** | ef413303-4a53-4a56-8080-b02bb7be5d4d |
 
-## Статус
+## Статус: ✅ LIVE
 
-- ✅ Cloudflare Tunnel установлен и active (fra03, fra19, fra06)
+- ✅ Cloudflare Tunnel (fra03, fra19, fra06)
 - ✅ DNS: grigory.belagent.com → CNAME → tunnel
 - ✅ SSL: Full
-- ✅ Cloudflare Access: только lisitskigrigory@gmail.com (magic link)
-- ✅ OpenClaw: allowedOrigins включает grigory.belagent.com
-- 🔧 WIP: device-pair publicUrl для auto-connect без паринга
+- ✅ Cloudflare Access: только lisitskigrigory@gmail.com
+- ✅ `dangerouslyDisableDeviceAuth: true` — внешнее подключение без device pairing
+- ✅ `plugins.device-pair.publicUrl: wss://grigory.belagent.com`
+- ✅ Dashboard подключается автоматически по токену
 
-## Dashboard URL
+## Dashboard URL (прямая ссылка)
 
 ```
 https://grigory.belagent.com/#token=90e7c81003bab38f8adc5c31d665ad72f2ab99c3318d2d28
+```
+
+## Ключевые настройки openclaw.json на VPS
+
+```json
+{
+  "gateway": {
+    "port": 19789,
+    "mode": "local",
+    "bind": "lan",
+    "controlUi": {
+      "dangerouslyDisableDeviceAuth": true,
+      "allowedOrigins": ["https://grigory.belagent.com"]
+    }
+  },
+  "plugins": {
+    "entries": {
+      "device-pair": {
+        "enabled": true,
+        "config": { "publicUrl": "wss://grigory.belagent.com" }
+      }
+    }
+  }
+}
 ```
 
 ## SSH
