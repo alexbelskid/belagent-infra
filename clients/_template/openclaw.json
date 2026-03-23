@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.3.24"
+  },
+  "env": {
+    "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}"
+  },
+  "auth": {
+    "profiles": {
+      "anthropic:def": {
+        "provider": "anthropic",
+        "mode": "token"
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "anthropic/claude-sonnet-4-6"
+      },
+      "workspace": "/root/.openclaw/workspace",
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "heartbeat": {
+        "every": "5m"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    }
+  },
+  "tools": {
+    "web": {
+      "search": {
+        "enabled": true,
+        "provider": "brave",
+        "apiKey": "${BRAVE_API_KEY}"
+      }
+    }
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "cron": {
+    "enabled": true,
+    "maxConcurrentRuns": 5
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "allowlist",
+      "botToken": "${TELEGRAM_BOT_TOKEN}",
+      "allowFrom": [${TELEGRAM_ALLOW_FROM}],
+      "groupPolicy": "open",
+      "streaming": "partial",
+      "mediaMaxMb": 50
+    }
+  },
+  "gateway": {
+    "port": ${OPENCLAW_PORT:-19789},
+    "mode": "local",
+    "bind": "lan",
+    "trustedProxies": ["127.0.0.1"],
+    "controlUi": {
+      "dangerouslyDisableDeviceAuth": true,
+      "allowedOrigins": [
+        "https://${CLIENT_SUBDOMAIN}.belagent.com"
+      ]
+    },
+    "auth": {
+      "mode": "token",
+      "token": "${GATEWAY_TOKEN}",
+      "rateLimit": {
+        "maxAttempts": 10,
+        "windowMs": 60000,
+        "lockoutMs": 300000
+      }
+    }
+  },
+  "skills": {
+    "load": {
+      "extraDirs": ["/root/.openclaw/skills"]
+    }
+  },
+  "plugins": {
+    "entries": {
+      "device-pair": {
+        "enabled": true,
+        "config": {
+          "publicUrl": "wss://${CLIENT_SUBDOMAIN}.belagent.com"
+        }
+      },
+      "telegram": {
+        "enabled": true
+      }
+    }
+  }
+}
