@@ -22,8 +22,10 @@
 ## Dashboard URL (прямая ссылка)
 
 ```
-https://grigory.belagent.com/#token=90e7c81003bab38f8adc5c31d665ad72f2ab99c3318d2d28
+https://grigory.belagent.com/#tok=DASHBOARD_TOKEN
 ```
+
+Получить токен: `ssh root@89.167.22.91 'openclaw dashboard --no-open'`
 
 ## Ключевые настройки openclaw.json на VPS
 

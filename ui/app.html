@@ -244,13 +244,22 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 </div>
 
 <script>
-const GW = 'wss://grigory.belagent.com';
-const TOK = '90e7c81003bab38f8adc5c31d665ad72f2ab99c3318d2d28';
+// Config via URL hash — never hardcode credentials in source.
+// Usage: https://name.belagent.com/#tok=YOUR_TOKEN
+// Override gateway: https://name.belagent.com/#tok=TOKEN&gw=wss://other.host
+const _cfg = new URLSearchParams(location.hash.slice(1));
+const TOK = _cfg.get('tok') || '';
+const GW  = _cfg.get('gw')  || ('wss://' + location.host);
 
 let ws, rid = 0, pend = {}, tasks = [], rawTasks = '# Задачи\n\n';
 
 // WS
 function connect() {
+  if (!TOK) {
+    document.getElementById('s-txt').textContent = 'Нет токена — добавьте #tok=TOKEN в URL';
+    document.getElementById('t-txt').textContent = 'Нет токена';
+    return;
+  }
   ws = new WebSocket(GW + '?token=' + TOK);
   ws.onopen = () => { setStatus(true); load(); };
   ws.onclose = () => { setStatus(false); setTimeout(connect, 3000); };

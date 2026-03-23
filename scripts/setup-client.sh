@@ -1,6 +1,14 @@
 #!/bin/bash
 # setup-client.sh — Deploy a new client on belagent.com
-# Usage: ./scripts/setup-client.sh --name grigory --vps 1.2.3.4 --email client@gmail.com --cf-token TOKEN --cf-account ACCOUNT_ID
+#
+# Usage:
+#   ./scripts/setup-client.sh --name grigory --vps 1.2.3.4 --email client@gmail.com \
+#     --cf-account ACCOUNT_ID [--port PORT]
+#
+# The Cloudflare API token can be supplied via --cf-token OR the CF_TOKEN environment variable.
+# Using the environment variable is preferred to avoid leaking the token in shell history:
+#   export CF_TOKEN=your-token
+#   ./scripts/setup-client.sh --name grigory ...
 
 set -euo pipefail
 
@@ -24,7 +32,7 @@ die()    { error "$*"; exit 1; }
 CLIENT_NAME=""
 VPS_IP=""
 CLIENT_EMAIL=""
-CF_TOKEN=""
+CF_TOKEN="${CF_TOKEN:-}"   # Accept from environment; --cf-token overrides
 CF_ACCOUNT=""
 OC_PORT=""
 
@@ -37,7 +45,10 @@ while [[ $# -gt 0 ]]; do
     --cf-account) CF_ACCOUNT="$2";  shift 2 ;;
     --port)     OC_PORT="$2";        shift 2 ;;
     --help|-h)
-      echo "Usage: $0 --name NAME --vps IP --email EMAIL --cf-token TOKEN --cf-account ACCOUNT_ID [--port PORT]"
+      echo "Usage: $0 --name NAME --vps IP --email EMAIL --cf-account ACCOUNT_ID [--cf-token TOKEN] [--port PORT]"
+      echo ""
+      echo "The Cloudflare API token can also be set via the CF_TOKEN environment variable."
+      echo "Using the env var is preferred: it won't appear in shell history or process listings."
       exit 0 ;;
     *) die "Unknown argument: $1" ;;
   esac
@@ -54,7 +65,7 @@ header "Validating inputs"
 [[ -n "$CLIENT_NAME" ]]  || die "--name is required"
 [[ -n "$VPS_IP" ]]       || die "--vps is required"
 [[ -n "$CLIENT_EMAIL" ]] || die "--email is required"
-[[ -n "$CF_TOKEN" ]]     || die "--cf-token is required"
+[[ -n "$CF_TOKEN" ]]     || die "--cf-token (or CF_TOKEN env var) is required"
 [[ -n "$CF_ACCOUNT" ]]   || die "--cf-account is required"
 
 # Validate client name (alphanumeric + hyphens only)
@@ -74,6 +85,29 @@ header "Validating inputs"
   || die "--port must be a number between 1024 and 65535: '$OC_PORT'"
 
 ok "Inputs valid"
+
+# ── Cleanup trap ──────────────────────────────────────────────────────────────
+# Track partially-created resources so we can emit cleanup instructions on failure.
+_TUNNEL_ID=""
+_APP_ID=""
+
+cleanup_on_error() {
+  local code=$?
+  [[ $code -eq 0 ]] && return
+  echo ""
+  error "Deployment failed (exit $code). Partially created resources:"
+  if [[ -n "$_TUNNEL_ID" ]]; then
+    warn "  Cloudflare Tunnel:  ${_TUNNEL_ID}"
+    warn "  Delete with:  cf_api DELETE /accounts/${CF_ACCOUNT}/cfd_tunnel/${_TUNNEL_ID}"
+  fi
+  if [[ -n "$_APP_ID" ]]; then
+    warn "  Cloudflare Access app: ${_APP_ID}"
+    warn "  Delete with:  cf_api DELETE /accounts/${CF_ACCOUNT}/access/apps/${_APP_ID}"
+  fi
+  [[ -n "$_TUNNEL_ID" ]] || [[ -n "$_APP_ID" ]] && \
+    warn "  Also remove the DNS CNAME record for ${SUBDOMAIN} if it was created."
+}
+trap cleanup_on_error EXIT
 
 # ── SSH connectivity check ────────────────────────────────────────────────────
 header "Checking SSH connectivity"
@@ -134,6 +168,7 @@ check_cf_success "$TUNNEL_RESULT" "create tunnel"
 
 TUNNEL_ID=$(echo "$TUNNEL_RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['id'])")
 [[ -n "$TUNNEL_ID" ]] || die "Failed to extract tunnel ID from API response"
+_TUNNEL_ID="$TUNNEL_ID"   # register for cleanup trap
 ok "Tunnel created: ${TUNNEL_ID}"
 
 log "Fetching tunnel token..."
@@ -224,11 +259,58 @@ APP_RESULT=$(cf_api POST "/accounts/${CF_ACCOUNT}/access/apps" \
 check_cf_success "$APP_RESULT" "create Access app"
 APP_ID=$(echo "$APP_RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['id'])")
 [[ -n "$APP_ID" ]] || die "Failed to extract Access app ID"
+_APP_ID="$APP_ID"   # register for cleanup trap
 
 POLICY_RESULT=$(cf_api POST "/accounts/${CF_ACCOUNT}/access/apps/${APP_ID}/policies" \
   -d "{\"name\":\"Client Only\",\"decision\":\"allow\",\"precedence\":1,\"include\":[{\"email\":{\"email\":\"${CLIENT_EMAIL}\"}}]}")
 check_cf_success "$POLICY_RESULT" "create Access policy"
 ok "Access policy created — allowed: ${CLIENT_EMAIL}"
+
+# ── Write client config record ────────────────────────────────────────────────
+CONFIG_DIR="$(cd "$(dirname "$0")/.." && pwd)/clients/${CLIENT_NAME}"
+mkdir -p "$CONFIG_DIR"
+CONFIG_FILE="${CONFIG_DIR}/config.md"
+
+cat > "$CONFIG_FILE" << EOF
+# ${CLIENT_NAME}
+
+| Field         | Value |
+|---------------|-------|
+| Domain        | https://${SUBDOMAIN} |
+| VPS IP        | ${VPS_IP} |
+| OpenClaw Port | ${OC_PORT} |
+| CF Tunnel ID  | ${TUNNEL_ID} |
+| CF Access App | ${APP_ID} |
+| Email         | ${CLIENT_EMAIL} |
+| Deployed      | $(date -u +%Y-%m-%dT%H:%M:%SZ) |
+
+## Get dashboard token
+
+\`\`\`bash
+ssh root@${VPS_IP} 'openclaw dashboard --no-open'
+\`\`\`
+
+## Dashboard URL (once you have the token)
+
+\`\`\`
+https://${SUBDOMAIN}/#tok=PASTE_TOKEN_HERE
+\`\`\`
+
+## Useful commands
+
+\`\`\`bash
+# View logs
+ssh root@${VPS_IP} 'journalctl -u openclaw -n 50 --no-pager'
+
+# Restart agent
+ssh root@${VPS_IP} 'systemctl restart openclaw'
+
+# Check tunnel status
+ssh root@${VPS_IP} 'systemctl status cloudflared'
+\`\`\`
+EOF
+
+ok "Client config saved → ${CONFIG_FILE}"
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 echo ""
@@ -238,7 +320,11 @@ echo -e "  ${BOLD}URL:${RESET}      https://${SUBDOMAIN}"
 echo -e "  ${BOLD}Email:${RESET}    ${CLIENT_EMAIL}"
 echo -e "  ${BOLD}Tunnel:${RESET}   ${TUNNEL_ID}"
 echo -e "  ${BOLD}Port:${RESET}     ${OC_PORT}"
+echo -e "  ${BOLD}Config:${RESET}   ${CONFIG_FILE}"
 echo ""
 echo -e "  Get dashboard token:"
 echo -e "  ${CYAN}ssh root@${VPS_IP} 'openclaw dashboard --no-open'${RESET}"
+echo ""
+echo -e "  Open dashboard (paste token into URL):"
+echo -e "  ${CYAN}https://${SUBDOMAIN}/#tok=PASTE_TOKEN_HERE${RESET}"
 echo ""
