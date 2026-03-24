@@ -45,7 +45,7 @@
 ### Веб-поиск (Brave API)
 - ✅ Настроен 2026-02-07
 - Проверять: `tools.web.search.enabled` и `tools.web.search.apiKey`
-- API key: `BSAS2tuc7ZBddViFspHgVls6O6wm8Jc` (configured)
+- API key: `<BRAVE_API_KEY_REDACTED>` (configured)
 
 ### Cron Jobs & Delivery Routing
 - ✅ Исправлен routing 2026-02-07
