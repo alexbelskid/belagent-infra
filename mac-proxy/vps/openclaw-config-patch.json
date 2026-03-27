@@ -1,0 +1,10 @@
+{
+  "_comment": "Патч для /root/.openclaw/openclaw.json — добавить openai провайдер через Mac CLIProxy туннель",
+  "auth.profiles.openai:default": {
+    "provider": "openai",
+    "mode": "api_key"
+  },
+  "agents.defaults.model.primary": "openai/gpt-5.1",
+  "agents.defaults.models.openai/gpt-5.1": {},
+  "agents.defaults.models.openai/gpt-5.4": {}
+}

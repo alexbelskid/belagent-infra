@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.local.autossh-tunnel</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/autossh</string>
+    <string>-M</string>
+    <string>0</string>
+    <string>-N</string>
+    <string>-R</string>
+    <string>8317:localhost:8317</string>
+    <string>vmi-tunnel</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>AUTOSSH_GATETIME</key>
+    <string>0</string>
+    <key>AUTOSSH_POLL</key>
+    <string>30</string>
+  </dict>
+
+  <!-- Автозапуск при логине -->
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- Перезапуск при падении -->
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/autossh-tunnel.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/autossh-tunnel.log</string>
+</dict>
+</plist>

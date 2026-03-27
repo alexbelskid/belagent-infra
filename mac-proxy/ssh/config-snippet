@@ -1,0 +1,10 @@
+# Mac → VPS tunnel (autossh)
+# Добавь в ~/.ssh/config
+Host vmi-tunnel
+  HostName <VPS_IP>
+  User root
+  IdentityFile ~/.ssh/id_ed25519
+  ServerAliveInterval 30
+  ServerAliveCountMax 3
+  ExitOnForwardFailure yes
+  StrictHostKeyChecking no

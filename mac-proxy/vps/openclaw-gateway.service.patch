@@ -1,0 +1,9 @@
+# Patch для /root/.config/systemd/user/openclaw-gateway.service
+# Добавить после строки Environment=ANTHROPIC_API_KEY=...
+
+Environment=OPENAI_API_KEY=${PROXYPAL_API_KEY}
+
+# Применить:
+# sed -i '/Environment=ANTHROPIC_API_KEY=/a Environment=OPENAI_API_KEY=proxypal-local' \
+#   /root/.config/systemd/user/openclaw-gateway.service
+# systemctl --user daemon-reload && systemctl --user restart openclaw-gateway
