@@ -22,7 +22,7 @@ scripts/
   context_manager.py   — авто-управление контекстом агента
 
 clients/
-  grigory/             — конфиг клиента Григорий (Мамский дом)
+  <name>/              — конфиг клиента (создаётся setup-client.sh)
 
 ui/
   app.html             — standalone дашборд (pure HTML, работает везде)
@@ -40,7 +40,7 @@ ui/
     instagram/         — Meta Graph API (посты, DM, insights)
 
 docs/
-  grigory-tutorial.md  — инструкция для клиента
+  client-tutorial.md   — шаблон инструкции для клиента
   ui-concept.md        — концепт UI (business/personal mode)
 ```
 
@@ -52,14 +52,13 @@ docs/
   --vps "IP" \
   --email "client@email.com" \
   --cf-token "CLOUDFLARE_TOKEN" \
-  --cf-account "ACCOUNT_ID"
+  --cf-account "ACCOUNT_ID" \
+  --cf-zone "ZONE_ID"
 ```
 
 ## Клиенты
 
-| Клиент | Домен | VPS | Статус |
-|--------|-------|-----|--------|
-| Григорий (Мамский дом) | grigory.belagent.com | 89.167.22.91 | ✅ Live |
+Конфиги клиентов хранятся в `clients/<name>/config.md` после деплоя.
 
 ## Стек
 

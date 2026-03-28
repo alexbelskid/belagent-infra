@@ -11,13 +11,6 @@ with custom subdomain (*.belagent.com) and a custom UI.
 - `scripts/install.sh` — installs nginx + pm2 + memory-server on fresh Ubuntu VPS
 - `docs/` — mockups, architecture diagrams
 
-## Active clients
-| Client | URL | VPS |
-|--------|-----|-----|
-| Григорий (Мамский дом) | https://grigory.belagent.com | 89.167.22.91 |
-| Lemuel (Прометей, фарма) | pending | 62.171.156.218 |
-| Евгений (Миша) | pending | 84.247.180.25 |
-
 ## Key architecture decisions
 - Cloudflare Tunnel -> nginx -> OpenClaw (19789) + memory-server (3001)
 - nginx routes `/api/memory/*` to 3001, everything else to 19789
@@ -26,7 +19,6 @@ with custom subdomain (*.belagent.com) and a custom UI.
 - Drag reheats simulation: alphaTarget(0.3).restart() on dragstart
 
 ## OpenClaw fork (branch: belagent)
-- Repo: https://github.com/alexbelskid/openclaw
 - New tabs: graph (default), activity, connections
 - Graph state in app-view-state.ts, controller in controllers/graph.ts
 - View in views/graph.ts (BelagentGraphCanvas Lit element)
@@ -37,16 +29,6 @@ with custom subdomain (*.belagent.com) and a custom UI.
 # then update cloudflared config + restart
 ```
 
-## Cloudflare
-- Domain: belagent.com
-- Zone ID: f0145f6c4985569c0d7e040e1a889523
-- Account ID: 9443beceed90c778812b721dadb4c485
-
-## Grigory instance
-- URL: https://grigory.belagent.com
-- Tunnel ID: 74bc9f50-fed6-4af1-89c6-942ee7639177
-- Dashboard: https://grigory.belagent.com/#token=90e7c81003bab38f8adc5c31d665ad72f2ab99c3318d2d28
-
 ## OpenClaw API
 - WebSocket RPC (not REST!)
 - Methods: cron.list, cron.add, sessions.list, config.get etc.
@@ -55,17 +37,11 @@ with custom subdomain (*.belagent.com) and a custom UI.
 
 ## Key OpenClaw configs
 - gateway.controlUi.dangerouslyDisableDeviceAuth: true (removes pairing required)
-- plugins.entries.device-pair.config.publicUrl: wss://grigory.belagent.com
+- plugins.entries.device-pair.config.publicUrl: wss://<CLIENT>.belagent.com
 - gateway.bind: lan (DO NOT change!)
 
-## VPS tooling
-- claude v2.1.81, gh v2.88.1 (logged in as alexbelskid)
-- gws v0.18.1, cloudflared v2026.3.0
-- everything-claude-code (106 skills)
-
 ## Pending tasks
-1. Deploy graph view to Grigory VPS (nginx + memory-server + updated UI dist)
-2. Run setup-client.sh for Lemuel + Evgeny
-3. gws OAuth for Grigory
+1. Deploy graph view to client VPS (nginx + memory-server + updated UI dist)
+2. Deploy pending clients via setup-client.sh
+3. gws OAuth integration
 4. Instagram extension (Meta Graph API)
-5. Quote for Anton (potential new client)

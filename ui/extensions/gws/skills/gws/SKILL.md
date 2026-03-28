@@ -4,9 +4,39 @@ Use this skill for any Google Workspace operations: Gmail, Drive, Calendar, Shee
 
 ## Setup
 
+### Interactive (local machine with browser)
 ```bash
-gws auth setup  # one-time: creates Cloud project, enables APIs
-gws auth login  # OAuth login
+gws auth setup  # one-time: creates Cloud project, enables APIs, OAuth login
+gws auth login  # subsequent logins
+```
+
+### Headless (VPS / server without browser)
+
+**Option A — Export from local machine:**
+```bash
+# On local machine (has browser):
+gws auth setup                         # one-time setup
+gws auth export --unmasked > creds.json
+
+# Copy to VPS:
+scp creds.json root@VPS_IP:/root/.config/gws/credentials.json
+ssh root@VPS_IP 'chmod 600 /root/.config/gws/credentials.json'
+```
+
+**Option B — Credentials file env var:**
+```bash
+export GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE=/root/.config/gws/credentials.json
+```
+
+**Option C — Service account (domain-wide delegation):**
+```bash
+export GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE=/path/to/service-account.json
+export GOOGLE_WORKSPACE_CLI_IMPERSONATED_USER=admin@example.com
+```
+
+### Verify
+```bash
+gws gmail users messages list --params '{"userId":"me","maxResults":1}'
 ```
 
 ## Usage
