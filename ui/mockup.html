@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>belagent — Command Center</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --border: #2a2a3d;
+    --accent: #6366f1;
+    --accent2: #8b5cf6;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --text: #e2e2f0;
+    --muted: #6b6b8a;
+    --radius: 12px;
+  }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .logo {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .logo-text { font-weight: 700; font-size: 15px; }
+  .logo-sub { font-size: 11px; color: var(--muted); }
+
+  .client-badge {
+    margin: 12px;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer;
+  }
+  .client-avatar {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #ec4899, #8b5cf6);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .client-name { font-size: 13px; font-weight: 600; }
+  .client-plan { font-size: 11px; color: var(--green); }
+
+  .nav { flex: 1; padding: 8px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--muted);
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(99,102,241,0.15); color: var(--accent); }
+  .nav-item .icon { width: 18px; text-align: center; font-size: 15px; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--accent);
+    color: white;
+    border-radius: 10px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .nav-section {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 12px 12px 4px;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green);
+    margin-left: auto;
+    box-shadow: 0 0 6px var(--green);
+  }
+
+  .sidebar-bottom {
+    padding: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .mode-toggle {
+    display: flex;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .mode-btn {
+    flex: 1; padding: 5px; border-radius: 6px;
+    font-size: 11px; font-weight: 600;
+    cursor: pointer; text-align: center;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .mode-btn.active { background: var(--accent); color: white; }
+
+  /* Main */
+  .main { flex: 1; overflow: auto; display: flex; flex-direction: column; }
+
+  .topbar {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 16px;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+  .topbar-actions { display: flex; gap: 8px; }
+  .btn {
+    padding: 7px 14px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #4f52d4; }
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); }
+
+  .content { padding: 24px; flex: 1; }
+
+  /* Stats row */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 700; }
+  .stat-change { font-size: 11px; color: var(--green); margin-top: 4px; }
+
+  /* Activity feed + side */
+  .main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+
+  .feed-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600; font-size: 14px;
+  }
+  .card-header .muted { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: auto; }
+
+  .feed-item {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 12px;
+    transition: background 0.1s;
+    cursor: pointer;
+  }
+  .feed-item:hover { background: var(--surface2); }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .feed-icon.msg { background: rgba(99,102,241,0.15); }
+  .feed-icon.cron { background: rgba(234,179,8,0.15); }
+  .feed-icon.mem { background: rgba(139,92,246,0.15); }
+  .feed-icon.tg { background: rgba(34,197,94,0.15); }
+  .feed-icon.err { background: rgba(239,68,68,0.15); }
+  .feed-body { flex: 1; min-width: 0; }
+  .feed-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .feed-desc { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .feed-time { font-size: 11px; color: var(--muted); flex-shrink: 0; padding-top: 2px; }
+
+  /* Right column */
+  .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+  /* Automations */
+  .cron-item {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .cron-item:last-child { border-bottom: none; }
+  .cron-toggle {
+    width: 32px; height: 18px;
+    background: var(--green);
+    border-radius: 9px;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .cron-toggle.off { background: var(--border); }
+  .cron-toggle::after {
+    content: '';
+    width: 14px; height: 14px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px; right: 2px;
+    transition: right 0.2s;
+  }
+  .cron-toggle.off::after { right: 16px; }
+  .cron-body { flex: 1; }
+  .cron-name { font-size: 13px; font-weight: 500; }
+  .cron-schedule { font-size: 11px; color: var(--muted); }
+  .cron-next { font-size: 11px; color: var(--accent); margin-top: 1px; }
+  .cron-run {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .cron-run:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Connections */
+  .conn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px; }
+  .conn-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .conn-item:hover { border-color: var(--accent); }
+  .conn-item.connected { border-color: rgba(34,197,94,0.3); }
+  .conn-top { display: flex; justify-content: space-between; align-items: center; }
+  .conn-ico { font-size: 20px; }
+  .conn-status { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; }
+  .conn-status.on { background: rgba(34,197,94,0.15); color: var(--green); }
+  .conn-status.off { background: rgba(107,107,138,0.15); color: var(--muted); }
+  .conn-name { font-size: 12px; font-weight: 600; }
+  .conn-desc { font-size: 11px; color: var(--muted); }
+  .conn-add {
+    border: 1px dashed var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 20px;
+  }
+  .conn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Views */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Chat */
+  .chat-layout { display: flex; flex-direction: column; height: calc(100vh - 64px); }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .msg { display: flex; gap: 12px; max-width: 80%; }
+  .msg.user { flex-direction: row-reverse; align-self: flex-end; }
+  .msg-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .msg-avatar.bot { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+  .msg-avatar.user { background: linear-gradient(135deg, #ec4899, #8b5cf6); }
+  .msg-bubble { padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5; }
+  .msg.bot .msg-bubble { background: var(--surface2); border-bottom-left-radius: 4px; }
+  .msg.user .msg-bubble { background: var(--accent); border-bottom-right-radius: 4px; }
+  .chat-input-area { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+  .chat-input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 16px; color: var(--text); font-size: 14px;
+    outline: none; resize: none;
+  }
+  .chat-input:focus { border-color: var(--accent); }
+  .send-btn { width: 44px; height: 44px; background: var(--accent); border: none; border-radius: 12px; cursor: pointer; font-size: 18px; }
+
+  /* Memory */
+  .mem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .mem-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mem-card:hover { border-color: var(--accent); }
+  .mem-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .mem-card-icon { font-size: 20px; }
+  .mem-card-title { font-size: 13px; font-weight: 600; }
+  .mem-card-count { font-size: 11px; color: var(--muted); margin-left: auto; }
+  .mem-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .mem-tag {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 3px 8px;
+    font-size: 11px; color: var(--muted);
+  }
+
+  .pulse { animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">🤖</div>
+    <div>
+      <div class="logo-text">belagent</div>
+    </div>
+  </div>
+
+  <div class="client-badge">
+    <div class="client-avatar">D</div>
+    <div>
+      <div class="client-name">Demo</div>
+      <div class="client-plan">● Active</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-section">Основное</div>
+    <div class="nav-item active" onclick="showView('feed')">
+      <span class="icon">📊</span> Активность
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item" onclick="showView('chat')">
+      <span class="icon">💬</span> Чат
+    </div>
+    <div class="nav-item" onclick="showView('automations')">
+      <span class="icon">⚡</span> Автоматизации
+    </div>
+    <div class="nav-item" onclick="showView('memory')">
+      <span class="icon">🧠</span> Память
+    </div>
+    <div class="nav-item" onclick="showView('connections')">
+      <span class="icon">🔌</span> Подключения
+    </div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="mode-toggle">
+      <div class="mode-btn active">Бизнес</div>
+      <div class="mode-btn">Расширен.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Активность</div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--green)">
+      <div style="width:7px;height:7px;background:var(--green);border-radius:50%;box-shadow:0 0 6px var(--green)" class="pulse"></div>
+      Demo подключён
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost">⚙️</button>
+      <button class="btn btn-primary" id="top-btn" onclick="handleTopBtn()">+ Новая задача</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- FEED VIEW -->
+    <div class="view active" id="view-feed">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Сообщений сегодня</div>
+          <div class="stat-value">47</div>
+          <div class="stat-change">↑ +12 от вчера</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Задач выполнено</div>
+          <div class="stat-value">8</div>
+          <div class="stat-change">↑ +3 от вчера</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Активных крон</div>
+          <div class="stat-value">4</div>
+          <div class="stat-change" style="color:var(--accent)">→ без изменений</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Записей в памяти</div>
+          <div class="stat-value">23</div>
+          <div class="stat-change">↑ +2 сегодня</div>
+        </div>
+      </div>
+
+      <div class="main-grid">
+        <div class="feed-card">
+          <div class="card-header">
+            🔄 Лента событий
+            <span class="muted">обновлено 2 мин назад</span>
+          </div>
+          <div class="feed-item">
+            <div class="feed-icon tg">💬</div>
+            <div class="feed-body">
+              <div class="feed-title">Ответ клиенту Марии Соколовой</div>
+              <div class="feed-desc">Записала на занятие 25 марта в 14:00, добавила в CRM</div>
+            </div>
+            <div class="feed-time">10:43</div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-icon mem">🧠</div>
+            <div class="feed-body">
+              <div class="feed-title">Сохранено в память</div>
+              <div class="feed-desc">Новый клиент: Дмитрий Иванов, контакт +7 921 xxx</div>
+            </div>
+            <div class="feed-time">10:31</div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-icon cron">⚡</div>
+            <div class="feed-body">
+              <div class="feed-title">Запущена автоматизация</div>
+              <div class="feed-desc">Утренний отчёт отправлен — 12 активных клиентов</div>
+            </div>
+            <div class="feed-time">09:00</div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-icon tg">💬</div>
+            <div class="feed-body">
+              <div class="feed-title">3 новых запроса в Telegram</div>
+              <div class="feed-desc">Анна, Сергей П., +1 неизвестный — все обработаны</div>
+            </div>
+            <div class="feed-time">08:47</div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-icon cron">⚡</div>
+            <div class="feed-body">
+              <div class="feed-title">Напоминания отправлены</div>
+              <div class="feed-desc">5 клиентам о занятии завтра</div>
+            </div>
+            <div class="feed-time">08:00</div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-icon err">⚠️</div>
+            <div class="feed-body">
+              <div class="feed-title">Предупреждение</div>
+              <div class="feed-desc">Клиент Петров не ответил 3 дня — стоит напомнить</div>
+            </div>
+            <div class="feed-time">вчера</div>
+          </div>
+        </div>
+
+        <div class="right-col">
+          <!-- Mini automations -->
+          <div class="feed-card">
+            <div class="card-header">⚡ Автоматизации</div>
+            <div class="cron-item">
+              <div class="cron-toggle"></div>
+              <div class="cron-body">
+                <div class="cron-name">Утренний отчёт</div>
+                <div class="cron-next">Следующий: завтра 09:00</div>
+              </div>
+              <div class="cron-run">▶</div>
+            </div>
+            <div class="cron-item">
+              <div class="cron-toggle"></div>
+              <div class="cron-body">
+                <div class="cron-name">Напоминания клиентам</div>
+                <div class="cron-next">Следующий: сегодня 20:00</div>
+              </div>
+              <div class="cron-run">▶</div>
+            </div>
+            <div class="cron-item">
+              <div class="cron-toggle off"></div>
+              <div class="cron-body">
+                <div class="cron-name">Еженедельная сводка</div>
+                <div class="cron-schedule" style="color:var(--muted)">Приостановлено</div>
+              </div>
+              <div class="cron-run">▶</div>
+            </div>
+          </div>
+
+          <!-- Mini connections -->
+          <div class="feed-card">
+            <div class="card-header">🔌 Подключения</div>
+            <div class="conn-grid">
+              <div class="conn-item connected">
+                <div class="conn-top">
+                  <span class="conn-ico">✈️</span>
+                  <span class="conn-status on">Вкл</span>
+                </div>
+                <div class="conn-name">Telegram</div>
+              </div>
+              <div class="conn-item connected">
+                <div class="conn-top">
+                  <span class="conn-ico">📧</span>
+                  <span class="conn-status on">Вкл</span>
+                </div>
+                <div class="conn-name">Gmail</div>
+              </div>
+              <div class="conn-item">
+                <div class="conn-top">
+                  <span class="conn-ico">📸</span>
+                  <span class="conn-status off">Выкл</span>
+                </div>
+                <div class="conn-name">Instagram</div>
+              </div>
+              <div class="conn-item conn-add">+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT VIEW -->
+    <div class="view" id="view-chat">
+      <div class="chat-layout" style="height:calc(100vh - 130px)">
+        <div class="chat-messages">
+          <div class="msg bot">
+            <div class="msg-avatar bot">🤖</div>
+            <div class="msg-bubble">Привет, Demo! Сегодня 47 сообщений, 3 новых клиента. Чем могу помочь?</div>
+          </div>
+          <div class="msg user">
+            <div class="msg-avatar user">D</div>
+            <div class="msg-bubble">Покажи список клиентов на завтра</div>
+          </div>
+          <div class="msg bot">
+            <div class="msg-avatar bot">🤖</div>
+            <div class="msg-bubble">Завтра 4 занятия:<br><br>🕐 10:00 — Анна Козлова (йога)<br>🕑 12:00 — Сергей Петров (растяжка)<br>🕒 15:00 — Мария Иванова (пилатес)<br>🕔 18:00 — Дмитрий Соколов (йога)<br><br>Все подтверждены ✅</div>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" placeholder="Написать сообщение..." rows="1"></textarea>
+          <button class="send-btn">↑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTOMATIONS VIEW -->
+    <div class="view" id="view-automations">
+      <div class="feed-card" style="margin-bottom:16px">
+        <div class="card-header">⚡ Автоматизации <span class="muted">4 активных</span></div>
+        <div class="cron-item">
+          <div class="cron-toggle"></div>
+          <div class="cron-body">
+            <div class="cron-name">Утренний отчёт</div>
+            <div class="cron-schedule">Каждый день в 09:00</div>
+            <div class="cron-next">Следующий запуск: завтра 09:00</div>
+          </div>
+          <div class="cron-run">▶ Запустить</div>
+        </div>
+        <div class="cron-item">
+          <div class="cron-toggle"></div>
+          <div class="cron-body">
+            <div class="cron-name">Напоминания клиентам</div>
+            <div class="cron-schedule">Каждый день в 08:00 и 20:00</div>
+            <div class="cron-next">Следующий запуск: сегодня 20:00</div>
+          </div>
+          <div class="cron-run">▶ Запустить</div>
+        </div>
+        <div class="cron-item">
+          <div class="cron-toggle"></div>
+          <div class="cron-body">
+            <div class="cron-name">Парсинг новых заявок</div>
+            <div class="cron-schedule">Каждые 2 часа</div>
+            <div class="cron-next">Следующий запуск: через 47 мин</div>
+          </div>
+          <div class="cron-run">▶ Запустить</div>
+        </div>
+        <div class="cron-item">
+          <div class="cron-toggle off"></div>
+          <div class="cron-body">
+            <div class="cron-name">Еженедельная сводка</div>
+            <div class="cron-schedule">Каждый понедельник в 10:00</div>
+            <div class="cron-next" style="color:var(--muted)">Приостановлено</div>
+          </div>
+          <div class="cron-run">▶ Запустить</div>
+        </div>
+      </div>
+      <button class="btn btn-primary">+ Добавить автоматизацию</button>
+    </div>
+
+    <!-- MEMORY VIEW -->
+    <div class="view" id="view-memory">
+      <div class="mem-grid">
+        <div class="mem-card">
+          <div class="mem-card-header">
+            <span class="mem-card-icon">👤</span>
+            <span class="mem-card-title">Клиенты</span>
+            <span class="mem-card-count">12 записей</span>
+          </div>
+          <div class="mem-tags">
+            <span class="mem-tag">Анна Козлова</span>
+            <span class="mem-tag">Сергей П.</span>
+            <span class="mem-tag">Мария И.</span>
+            <span class="mem-tag">+9 ещё</span>
+          </div>
+        </div>
+        <div class="mem-card">
+          <div class="mem-card-header">
+            <span class="mem-card-icon">📌</span>
+            <span class="mem-card-title">Заметки</span>
+            <span class="mem-card-count">8 записей</span>
+          </div>
+          <div class="mem-tags">
+            <span class="mem-tag">Расписание март</span>
+            <span class="mem-tag">Цены 2026</span>
+            <span class="mem-tag">+6 ещё</span>
+          </div>
+        </div>
+        <div class="mem-card">
+          <div class="mem-card-header">
+            <span class="mem-card-icon">📁</span>
+            <span class="mem-card-title">Документы</span>
+            <span class="mem-card-count">3 файла</span>
+          </div>
+          <div class="mem-tags">
+            <span class="mem-tag">Шаблон договора</span>
+            <span class="mem-tag">Прайс-лист</span>
+          </div>
+        </div>
+        <div class="mem-card">
+          <div class="mem-card-header">
+            <span class="mem-card-icon">🎯</span>
+            <span class="mem-card-title">Задачи</span>
+            <span class="mem-card-count">5 активных</span>
+          </div>
+          <div class="mem-tags">
+            <span class="mem-tag">Позвонить Петрову</span>
+            <span class="mem-tag">Обновить сайт</span>
+            <span class="mem-tag">+3 ещё</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONNECTIONS VIEW -->
+    <div class="view" id="view-connections">
+      <div class="feed-card">
+        <div class="card-header">🔌 Подключённые сервисы</div>
+        <div class="conn-grid" style="grid-template-columns:repeat(3,1fr);padding:20px;gap:14px">
+          <div class="conn-item connected" style="flex-direction:row;align-items:center;gap:12px;padding:16px">
+            <span style="font-size:28px">✈️</span>
+            <div>
+              <div class="conn-name">Telegram</div>
+              <div class="conn-desc">@demo_bot</div>
+              <span class="conn-status on" style="margin-top:4px;display:inline-block">Подключён</span>
+            </div>
+          </div>
+          <div class="conn-item connected" style="flex-direction:row;align-items:center;gap:12px;padding:16px">
+            <span style="font-size:28px">📧</span>
+            <div>
+              <div class="conn-name">Gmail</div>
+              <div class="conn-desc">user@example.com</div>
+              <span class="conn-status on" style="margin-top:4px;display:inline-block">Подключён</span>
+            </div>
+          </div>
+          <div class="conn-item" style="flex-direction:row;align-items:center;gap:12px;padding:16px">
+            <span style="font-size:28px">📸</span>
+            <div>
+              <div class="conn-name">Instagram</div>
+              <div class="conn-desc">Не подключён</div>
+              <span class="conn-status off" style="margin-top:4px;display:inline-block">Подключить</span>
+            </div>
+          </div>
+          <div class="conn-item" style="flex-direction:row;align-items:center;gap:12px;padding:16px">
+            <span style="font-size:28px">📅</span>
+            <div>
+              <div class="conn-name">Google Calendar</div>
+              <div class="conn-desc">Не подключён</div>
+              <span class="conn-status off" style="margin-top:4px;display:inline-block">Подключить</span>
+            </div>
+          </div>
+          <div class="conn-item" style="flex-direction:row;align-items:center;gap:12px;padding:16px">
+            <span style="font-size:28px">💬</span>
+            <div>
+              <div class="conn-name">WhatsApp</div>
+              <div class="conn-desc">Не подключён</div>
+              <span class="conn-status off" style="margin-top:4px;display:inline-block">Подключить</span>
+            </div>
+          </div>
+          <div class="conn-item conn-add" style="flex-direction:row;align-items:center;justify-content:center;gap:8px;padding:16px">
+            <span style="font-size:20px">+</span>
+            <span style="font-size:13px">Добавить</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const views = {
+  feed: { title: 'Активность', btn: '+ Новая задача' },
+  chat: { title: 'Чат с ботом', btn: '🗑 Очистить чат' },
+  automations: { title: 'Автоматизации', btn: '+ Добавить' },
+  memory: { title: 'Память', btn: '+ Добавить запись' },
+  connections: { title: 'Подключения', btn: '+ Подключить сервис' },
+};
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item')[Object.keys(views).indexOf(name)].classList.add('active');
+  document.getElementById('page-title').textContent = views[name].title;
+  document.getElementById('top-btn').textContent = views[name].btn;
+}
+
+function handleTopBtn() {
+  alert('Эта функция будет в финальной версии 🚀');
+}
+</script>
+</body>
+</html>
