@@ -1,0 +1,8 @@
+/* belagent: hide brain, wrench, focus, cron — keep only refresh + session badge */
+/* Desktop: hide separator and all buttons after the first (refresh) */
+.chat-controls .chat-controls__separator { display: none !important; }
+.chat-controls button:nth-child(n+3) { display: none !important; }
+
+/* Mobile dropdown: hide thinking/tool/focus controls */
+.chat-controls__thinking { display: none !important; }
+.chat-controls-dropdown .chat-controls__thinking { display: none !important; }
