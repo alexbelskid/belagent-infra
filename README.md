@@ -44,13 +44,14 @@ mac-proxy/
 
 scripts/
   setup-client.sh      — деплой нового клиента за 30 мин
+  gws-auth.sh          — настройка Google Workspace OAuth на VPS
   context_manager.py   — авто-управление контекстом агента
 
 clients/
   _template/           — шаблон конфига нового клиента
-  grigory/             — конфиг клиента Григорий (Мамский дом)
 
 ui/
+  belagent-hide.css    — CSS branding (скрывает лишние кнопки)
   app.html             — standalone дашборд (pure HTML, работает везде)
   mockup.html          — статичный прототип дизайна
   INSTALL.md           — инструкция установки
@@ -66,7 +67,7 @@ ui/
     instagram/         — Meta Graph API (посты, DM, insights)
 
 docs/
-  grigory-tutorial.md  — инструкция для клиента
+  client-tutorial.md   — шаблон инструкции для клиента
   ui-concept.md        — концепт UI (business/personal mode)
 ```
 
@@ -78,14 +79,13 @@ docs/
   --vps "IP" \
   --email "client@email.com" \
   --cf-token "CLOUDFLARE_TOKEN" \
-  --cf-account "ACCOUNT_ID"
+  --cf-account "ACCOUNT_ID" \
+  --cf-zone "ZONE_ID"
 ```
 
 ## Клиенты
 
-| Клиент | Домен | VPS | Статус |
-|--------|-------|-----|--------|
-| Григорий (Мамский дом) | grigory.belagent.com | 89.167.22.91 | ✅ Live |
+Конфиги клиентов хранятся в `clients/<name>/config.md` после деплоя.
 
 ## Модели (через Mac CLIProxy)
 

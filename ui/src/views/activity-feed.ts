@@ -1,22 +1,33 @@
 import { html, nothing } from "lit";
 import type { SessionListEntry } from "../types.ts";
 
+export type CronJob = {
+  id: string;
+  name: string;
+  enabled: boolean;
+  nextRun?: number;
+};
+
 export type ActivityEvent = {
   id: string;
   kind: "message" | "cron" | "memory" | "connection" | "error" | "system";
   title: string;
   description?: string;
   timestamp: number;
+  duration?: number; // seconds
+  icon?: string;
 };
 
 export type ActivityFeedProps = {
   loading: boolean;
   events: ActivityEvent[];
   sessions: SessionListEntry[];
+  cronJobs?: CronJob[];
   onRefresh: () => void;
 };
 
-function iconForKind(kind: ActivityEvent["kind"]): string {
+function iconForKind(kind: ActivityEvent["kind"], customIcon?: string): string {
+  if (customIcon) return customIcon;
   switch (kind) {
     case "message": return "💬";
     case "cron": return "⚡";
@@ -52,39 +63,94 @@ function formatTime(ts: number): string {
   return "вчера";
 }
 
-// Derive activity events from sessions list
-export function eventsFromSessions(sessions: SessionListEntry[]): ActivityEvent[] {
+function formatDuration(seconds: number): string {
+  if (seconds <= 0) return "";
+  if (seconds < 60) return `${seconds}с`;
+  return `${Math.round(seconds / 60)} мин`;
+}
+
+function classifySession(
+  session: SessionListEntry,
+  cronJobs: CronJob[],
+): { kind: ActivityEvent["kind"]; title: string; description: string; icon: string } {
+  const key = (session.key ?? "").toLowerCase();
+  const label = session.label ?? session.key ?? "";
+
+  if (key.includes("cron")) {
+    const jobId = key.replace(/^cron[:\-_]?/, "").split(":")[0];
+    const job = cronJobs.find(j => j.id === jobId || key.includes(j.id));
+    return {
+      kind: "cron",
+      icon: "⚡",
+      title: job ? job.name : "Автоматизация",
+      description: job ? (job.enabled ? "Активно" : "Приостановлено") : label,
+    };
+  }
+  if (key.includes("telegram")) {
+    return {
+      kind: "message",
+      icon: "✈️",
+      title: "Telegram",
+      description: label !== key ? label : "Диалог в Telegram",
+    };
+  }
+  if (key.includes("direct") || key.includes("web")) {
+    return {
+      kind: "message",
+      icon: "💬",
+      title: "Прямое сообщение",
+      description: label !== key ? label : "Веб-чат",
+    };
+  }
+  if (key.includes("gmail") || key.includes("email")) {
+    return {
+      kind: "message",
+      icon: "📧",
+      title: "Email",
+      description: label,
+    };
+  }
+  if (key.includes("calendar")) {
+    return {
+      kind: "system",
+      icon: "📅",
+      title: "Календарь",
+      description: label,
+    };
+  }
+  return {
+    kind: "system",
+    icon: "🔧",
+    title: "Действие агента",
+    description: label,
+  };
+}
+
+// Derive activity events from sessions list, cross-referenced with cron jobs
+export function eventsFromSessions(
+  sessions: SessionListEntry[],
+  cronJobs: CronJob[] = [],
+): ActivityEvent[] {
   const events: ActivityEvent[] = [];
 
   for (const session of sessions) {
-    const label = session.label ?? session.key ?? "Сессия";
     const updatedAt = session.updatedAt ?? session.createdAt ?? Date.now();
+    const createdAt = session.createdAt ?? updatedAt;
+    const duration = updatedAt !== createdAt
+      ? Math.round((updatedAt - createdAt) / 1000)
+      : 0;
 
-    if (session.key?.includes("cron")) {
-      events.push({
-        id: session.key,
-        kind: "cron",
-        title: "Запущена автоматизация",
-        description: label,
-        timestamp: updatedAt,
-      });
-    } else if (session.key?.includes("telegram") || session.key?.includes("direct")) {
-      events.push({
-        id: session.key,
-        kind: "message",
-        title: "Сообщение обработано",
-        description: session.label ?? "Диалог",
-        timestamp: updatedAt,
-      });
-    } else {
-      events.push({
-        id: session.key ?? String(Math.random()),
-        kind: "system",
-        title: "Действие агента",
-        description: label,
-        timestamp: updatedAt,
-      });
-    }
+    const classified = classifySession(session, cronJobs);
+
+    events.push({
+      id: session.key ?? String(Math.random()),
+      kind: classified.kind,
+      title: classified.title,
+      description: classified.description,
+      icon: classified.icon,
+      timestamp: updatedAt,
+      duration,
+    });
   }
 
   return events.sort((a, b) => b.timestamp - a.timestamp).slice(0, 50);
@@ -92,6 +158,14 @@ export function eventsFromSessions(sessions: SessionListEntry[]): ActivityEvent[
 
 export function renderActivityFeed(props: ActivityFeedProps) {
   const { loading, events, onRefresh } = props;
+
+  // Stats: filter to today only
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayTs = todayStart.getTime();
+  const todayEvents = events.filter(e => e.timestamp >= todayTs);
+  const todayMsgs = todayEvents.filter(e => e.kind === "message").length;
+  const todayAuto = todayEvents.filter(e => e.kind === "cron").length;
 
   return html`
     <div class="activity-feed-root">
@@ -160,6 +234,10 @@ export function renderActivityFeed(props: ActivityFeedProps) {
           align-items: center;
           gap: 8px;
           color: var(--c-muted, #6b6b8a);
+        }
+        .af-card-count {
+          font-weight: 400;
+          font-size: 11px;
         }
 
         .af-item {
@@ -230,39 +308,47 @@ export function renderActivityFeed(props: ActivityFeedProps) {
       <div class="af-stats">
         <div class="af-stat">
           <div class="af-stat-label">Событий сегодня</div>
-          <div class="af-stat-value">${events.length}</div>
+          <div class="af-stat-value">${todayEvents.length}</div>
         </div>
         <div class="af-stat">
           <div class="af-stat-label">Сообщений</div>
-          <div class="af-stat-value">${events.filter(e => e.kind === "message").length}</div>
+          <div class="af-stat-value">${todayMsgs}</div>
         </div>
         <div class="af-stat">
           <div class="af-stat-label">Автоматизаций</div>
-          <div class="af-stat-value">${events.filter(e => e.kind === "cron").length}</div>
+          <div class="af-stat-value">${todayAuto}</div>
         </div>
       </div>
 
       <div class="af-card">
-        <div class="af-card-title">🔄 Лента событий</div>
+        <div class="af-card-title">
+          🔄 Лента событий
+          <span class="af-card-count">${events.length} всего</span>
+        </div>
 
         ${loading
           ? html`<div class="af-loading">Загрузка...</div>`
           : events.length === 0
             ? html`<div class="af-empty">Пока нет событий. Начните диалог с ботом!</div>`
-            : events.map(event => html`
-              <div class="af-item">
-                <div class="af-icon" style="background: ${colorForKind(event.kind)}22;">
-                  ${iconForKind(event.kind)}
-                </div>
-                <div class="af-body">
-                  <div class="af-item-title">${event.title}</div>
-                  ${event.description
-                    ? html`<div class="af-item-desc">${event.description}</div>`
-                    : nothing}
-                </div>
-                <div class="af-time">${formatTime(event.timestamp)}</div>
-              </div>
-            `)
+            : events.map(event => {
+                const durStr = event.duration ? formatDuration(event.duration) : "";
+                return html`
+                  <div class="af-item">
+                    <div class="af-icon" style="background: ${colorForKind(event.kind)}22;">
+                      ${iconForKind(event.kind, event.icon)}
+                    </div>
+                    <div class="af-body">
+                      <div class="af-item-title">${event.title}</div>
+                      ${event.description
+                        ? html`<div class="af-item-desc">
+                            ${event.description}${durStr ? ` · ${durStr}` : ""}
+                          </div>`
+                        : nothing}
+                    </div>
+                    <div class="af-time">${formatTime(event.timestamp)}</div>
+                  </div>
+                `;
+              })
         }
       </div>
     </div>

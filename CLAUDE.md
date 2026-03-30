@@ -74,7 +74,42 @@ TOP BAR:
 | Lemuel | pending | 62.171.156.218 | — |
 | Evgeny | pending | 84.247.180.25 | — |
 
-## Mac CLIProxy туннель — правила работы
+## Repo structure
+- `ui/belagent-hide.css` — CSS injected into OpenClaw control-ui (hides brain/wrench/focus/cron buttons)
+- `ui/app.html` — standalone dashboard (pure HTML, works everywhere)
+- `ui/src/` — Lit/TS components for OpenClaw UI (activity-feed, connections, tasks)
+- `ui/extensions/` — OpenClaw skill plugins (gws, instagram)
+- `scripts/setup-client.sh` — one-command client deploy
+- `scripts/gws-auth.sh` — Google Workspace OAuth setup for a VPS
+- `mac-proxy/` — Mac CLIProxy tunnel files and VPS patches
+- `docs/` — architecture diagrams
+
+## Key architecture decisions
+- Cloudflare Tunnel -> nginx -> OpenClaw (18789)
+- UI is vanilla OpenClaw v2026.3.23-2 with belagent-hide.css branding
+- No auth on memory-server (bound to 127.0.0.1, only reachable via nginx)
+
+## Deploy to new client
+```bash
+./scripts/setup-client.sh --name clientname --vps IP --email client@email.com \
+  --cf-account ACCOUNT_ID --cf-zone ZONE_ID
+```
+
+## OpenClaw API
+- WebSocket RPC (not REST!)
+- Methods: cron.list, cron.add, sessions.list, config.get etc.
+- Control-UI assets: /usr/lib/node_modules/openclaw/dist/control-ui/
+
+## Key OpenClaw configs
+- gateway.controlUi.dangerouslyDisableDeviceAuth: true (removes pairing required)
+- plugins.entries.device-pair.config.publicUrl: wss://<CLIENT>.belagent.com
+- gateway.bind: lan (DO NOT change!)
+
+## Extensions (deploy to /root/.openclaw/skills/ on VPS)
+- `ui/extensions/gws/` — Google Workspace via gws CLI (Gmail, Drive, Calendar, Sheets)
+- `ui/extensions/instagram/` — Meta Graph API (posts, DMs, insights)
+
+## Mac CLIProxy tunnel
 
 ### Что это
 Mac (ProxyPal на :8317) -> autossh reverse SSH -> VPS localhost:8317 -> OpenClaw openai провайдер.
@@ -143,3 +178,10 @@ npm install -g openclaw@latest   # на VPS
 
 - UI форк: `github.com/alexbelskid/openclaw` (ветка `belagent`)
 - Инфра: `github.com/alexbelskid/belagent-infra`
+
+## Pending tasks
+1. Deploy pending clients via setup-client.sh
+2. Instagram extension deploy
+
+# currentDate
+Today's date is 2026-03-30.

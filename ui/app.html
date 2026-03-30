@@ -181,8 +181,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 
     <!-- ACTIVITY -->
     <div class="view" id="view-activity">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:18px;font-weight:700">📊 Активность</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="activity-updated" style="font-size:11px;color:var(--muted)"></span>
+          <button class="btn-run" onclick="load()" style="padding:5px 12px">↻ Обновить</button>
+        </div>
+      </div>
+      <div class="stats" id="activity-stats">
+        <div class="stat"><div class="stat-label">Событий сегодня</div><div class="stat-value" id="stat-today">—</div></div>
+        <div class="stat"><div class="stat-label">Сообщений</div><div class="stat-value" id="stat-msgs">—</div></div>
+        <div class="stat"><div class="stat-label">Автоматизаций</div><div class="stat-value" id="stat-auto">—</div></div>
+      </div>
       <div class="card">
-        <div class="card-header">🔄 Лента событий</div>
+        <div class="card-header">🔄 Лента событий <span class="sub" id="feed-cnt"></span></div>
         <div id="feed-list"><div class="empty">Загрузка...</div></div>
       </div>
     </div>
@@ -252,6 +264,9 @@ const TOK = _cfg.get('tok') || '';
 const GW  = _cfg.get('gw')  || ('wss://' + location.host);
 
 let ws, rid = 0, pend = {}, tasks = [], rawTasks = '# Задачи\n\n';
+let cronJobs = []; // cached cron jobs for activity cross-reference
+let lastLoadTs = 0; // track last refresh time
+let autoRefreshTimer = null;
 
 // WS
 function connect() {
@@ -288,25 +303,47 @@ function setStatus(on) {
 }
 
 async function load() {
+  let sessions = [];
   // Sessions
   try {
     const r = await rpc('sessions.list', {});
-    const list = r?.sessions || [];
-    document.getElementById('stat-s').textContent = list.length;
-    renderSessions(list);
-    renderActivity(list);
+    sessions = r?.sessions || [];
+    document.getElementById('stat-s').textContent = sessions.length;
+    renderSessions(sessions);
   } catch {}
 
   // Cron
   try {
     const r = await rpc('cron.list', {});
-    const jobs = r?.jobs || [];
-    document.getElementById('stat-c').textContent = jobs.filter(j=>j.enabled).length;
-    renderCron(jobs);
+    cronJobs = r?.jobs || [];
+    document.getElementById('stat-c').textContent = cronJobs.filter(j=>j.enabled).length;
+    renderCron(cronJobs);
   } catch {}
+
+  // Unified activity feed (sessions + cron cross-referenced)
+  renderActivity(sessions, cronJobs);
 
   // Tasks file
   loadTasks();
+
+  // Update refresh timestamp
+  lastLoadTs = Date.now();
+  updateRefreshIndicator();
+
+  // Start auto-refresh (30s)
+  if (!autoRefreshTimer) {
+    autoRefreshTimer = setInterval(() => {
+      if (ws && ws.readyState === 1) load();
+      updateRefreshIndicator();
+    }, 30000);
+  }
+}
+
+function updateRefreshIndicator() {
+  const el = document.getElementById('activity-updated');
+  if (!el || !lastLoadTs) return;
+  const ago = Math.floor((Date.now() - lastLoadTs) / 1000);
+  el.textContent = ago < 5 ? 'Обновлено' : ago + ' сек назад';
 }
 
 // Tasks
@@ -415,15 +452,99 @@ function renderSessions(list) {
     </div>`).join('');
 }
 
-function renderActivity(list) {
+function classifySession(s, jobs) {
+  const key = (s.key || '').toLowerCase();
+  const label = s.label || s.key || '';
+
+  if (key.includes('cron')) {
+    // Cross-reference with cron jobs to get real name
+    const jobId = key.replace(/^cron[:\-_]?/, '').split(':')[0];
+    const job = jobs.find(j => j.id === jobId || key.includes(j.id));
+    return {
+      icon: '⚡', color: 'rgba(234,179,8,.12)', kind: 'cron',
+      title: job ? job.name : 'Автоматизация',
+      desc: job ? (job.enabled ? 'Активно' : 'Приостановлено') : label,
+    };
+  }
+  if (key.includes('telegram')) {
+    return {
+      icon: '✈️', color: 'rgba(99,102,241,.12)', kind: 'message',
+      title: 'Telegram',
+      desc: label !== key ? label : 'Диалог в Telegram',
+    };
+  }
+  if (key.includes('direct') || key.includes('web')) {
+    return {
+      icon: '💬', color: 'rgba(99,102,241,.12)', kind: 'message',
+      title: 'Прямое сообщение',
+      desc: label !== key ? label : 'Веб-чат',
+    };
+  }
+  if (key.includes('gmail') || key.includes('email')) {
+    return {
+      icon: '📧', color: 'rgba(34,197,94,.12)', kind: 'message',
+      title: 'Email',
+      desc: label,
+    };
+  }
+  if (key.includes('calendar')) {
+    return {
+      icon: '📅', color: 'rgba(139,92,246,.12)', kind: 'system',
+      title: 'Календарь',
+      desc: label,
+    };
+  }
+  // Fallback
+  return {
+    icon: '🔧', color: 'rgba(107,107,138,.08)', kind: 'system',
+    title: 'Действие агента',
+    desc: label,
+  };
+}
+
+function renderActivity(sessions, jobs) {
   const el = document.getElementById('feed-list');
-  if (!list.length) { el.innerHTML='<div class="empty">Нет событий</div>'; return; }
-  el.innerHTML = list.slice(0,20).map(s=>{
-    const isCron = s.key?.includes('cron');
+
+  // Build unified event list from sessions
+  const events = sessions.map(s => {
+    const c = classifySession(s, jobs);
+    const ts = s.updatedAt || s.createdAt || 0;
+    const duration = (s.updatedAt && s.createdAt && s.updatedAt !== s.createdAt)
+      ? Math.round((s.updatedAt - s.createdAt) / 1000) : 0;
+    return { ...c, ts, duration, key: s.key };
+  });
+
+  // Sort newest first
+  events.sort((a, b) => b.ts - a.ts);
+
+  // Stats: today only
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const todayTs = todayStart.getTime();
+  const todayEvents = events.filter(e => e.ts >= todayTs);
+  const todayMsgs = todayEvents.filter(e => e.kind === 'message').length;
+  const todayAuto = todayEvents.filter(e => e.kind === 'cron').length;
+
+  document.getElementById('stat-today').textContent = todayEvents.length;
+  document.getElementById('stat-msgs').textContent = todayMsgs;
+  document.getElementById('stat-auto').textContent = todayAuto;
+  document.getElementById('feed-cnt').textContent = events.length + ' всего';
+
+  if (!events.length) {
+    el.innerHTML = '<div class="empty">Нет событий. Начните диалог с ботом!</div>';
+    return;
+  }
+
+  el.innerHTML = events.slice(0, 30).map(e => {
+    const durStr = e.duration > 0
+      ? (e.duration < 60 ? e.duration + 'с' : Math.round(e.duration / 60) + ' мин')
+      : '';
     return `<div class="feed-item">
-      <div class="feed-ico" style="background:${isCron?'rgba(234,179,8,.12)':'rgba(99,102,241,.12)'}">${isCron?'⚡':'💬'}</div>
-      <div class="feed-body"><div class="feed-title">${isCron?'Автоматизация':'Сообщение'}</div><div class="feed-desc">${esc(s.label||s.key||'')}</div></div>
-      <div class="feed-time">${fmtTime(s.updatedAt)}</div>
+      <div class="feed-ico" style="background:${e.color}">${e.icon}</div>
+      <div class="feed-body">
+        <div class="feed-title">${esc(e.title)}</div>
+        <div class="feed-desc">${esc(e.desc)}${durStr ? ' · ' + durStr : ''}</div>
+      </div>
+      <div class="feed-time">${fmtTime(e.ts)}</div>
     </div>`;
   }).join('');
 }
@@ -502,6 +623,9 @@ document.getElementById('chat-input').addEventListener('input', function(){
   this.style.height='auto';
   this.style.height=Math.min(this.scrollHeight,120)+'px';
 });
+
+// Update refresh indicator every 5s
+setInterval(updateRefreshIndicator, 5000);
 
 connect();
 </script>

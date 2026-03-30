@@ -2,13 +2,13 @@
 # setup-client.sh — Deploy a new client on belagent.com
 #
 # Usage:
-#   ./scripts/setup-client.sh --name grigory --vps 1.2.3.4 --email client@gmail.com \
+#   ./scripts/setup-client.sh --name clientname --vps 1.2.3.4 --email client@gmail.com \
 #     --cf-account ACCOUNT_ID [--port PORT]
 #
 # The Cloudflare API token can be supplied via --cf-token OR the CF_TOKEN environment variable.
 # Using the environment variable is preferred to avoid leaking the token in shell history:
 #   export CF_TOKEN=your-token
-#   ./scripts/setup-client.sh --name grigory ...
+#   ./scripts/setup-client.sh --name clientname ...
 
 set -euo pipefail
 
@@ -33,7 +33,8 @@ CLIENT_NAME=""
 VPS_IP=""
 CLIENT_EMAIL=""
 CF_TOKEN="${CF_TOKEN:-}"   # Accept from environment; --cf-token overrides
-CF_ACCOUNT=""
+CF_ACCOUNT="${CF_ACCOUNT:-}"
+CF_ZONE_ID="${CF_ZONE_ID:-}"
 OC_PORT=""
 
 while [[ $# -gt 0 ]]; do
@@ -43,9 +44,10 @@ while [[ $# -gt 0 ]]; do
     --email)    CLIENT_EMAIL="$2";   shift 2 ;;
     --cf-token) CF_TOKEN="$2";       shift 2 ;;
     --cf-account) CF_ACCOUNT="$2";  shift 2 ;;
+    --cf-zone)  CF_ZONE_ID="$2";    shift 2 ;;
     --port)     OC_PORT="$2";        shift 2 ;;
     --help|-h)
-      echo "Usage: $0 --name NAME --vps IP --email EMAIL --cf-account ACCOUNT_ID [--cf-token TOKEN] [--port PORT]"
+      echo "Usage: $0 --name NAME --vps IP --email EMAIL --cf-account ACCOUNT_ID --cf-zone ZONE_ID [--cf-token TOKEN] [--port PORT]"
       echo ""
       echo "The Cloudflare API token can also be set via the CF_TOKEN environment variable."
       echo "Using the env var is preferred: it won't appear in shell history or process listings."
@@ -57,7 +59,7 @@ done
 OC_PORT="${OC_PORT:-18789}"
 DOMAIN="belagent.com"
 SUBDOMAIN="${CLIENT_NAME}.${DOMAIN}"
-ZONE_ID="f0145f6c4985569c0d7e040e1a889523"
+ZONE_ID="${CF_ZONE_ID}"
 
 # ── Validation ────────────────────────────────────────────────────────────────
 header "Validating inputs"
@@ -67,6 +69,7 @@ header "Validating inputs"
 [[ -n "$CLIENT_EMAIL" ]] || die "--email is required"
 [[ -n "$CF_TOKEN" ]]     || die "--cf-token (or CF_TOKEN env var) is required"
 [[ -n "$CF_ACCOUNT" ]]   || die "--cf-account is required"
+[[ -n "$CF_ZONE_ID" ]]   || die "--cf-zone (or CF_ZONE_ID env var) is required"
 
 # Validate client name (alphanumeric + hyphens only)
 [[ "$CLIENT_NAME" =~ ^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$ ]] \
@@ -146,7 +149,7 @@ if not d.get('success', False):
 echo -e "\n${BOLD}Deploying ${CYAN}${SUBDOMAIN}${RESET}${BOLD} → ${CYAN}${VPS_IP}:${OC_PORT}${RESET}\n"
 
 # ── Step 1: Install cloudflared on VPS ────────────────────────────────────────
-header "Step 1/7: Installing cloudflared on VPS"
+header "Step 1/8: Installing cloudflared on VPS"
 ssh "root@${VPS_IP}" "
   set -e
   if command -v cloudflared >/dev/null 2>&1; then
@@ -161,7 +164,7 @@ ssh "root@${VPS_IP}" "
 ok "cloudflared ready on VPS"
 
 # ── Step 2: Create Cloudflare Tunnel ─────────────────────────────────────────
-header "Step 2/7: Creating Cloudflare Tunnel"
+header "Step 2/8: Creating Cloudflare Tunnel"
 TUNNEL_RESULT=$(cf_api POST "/accounts/${CF_ACCOUNT}/cfd_tunnel" \
   -d "{\"name\":\"${CLIENT_NAME}\",\"config_src\":\"cloudflare\"}")
 check_cf_success "$TUNNEL_RESULT" "create tunnel"
@@ -178,7 +181,7 @@ TUNNEL_TOKEN=$(echo "$TOKEN_RESULT" | python3 -c "import sys,json; print(json.lo
 [[ -n "$TUNNEL_TOKEN" ]] || die "Failed to extract tunnel token from API response"
 
 # ── Step 3: Configure tunnel ingress ─────────────────────────────────────────
-header "Step 3/7: Configuring tunnel ingress"
+header "Step 3/8: Configuring tunnel ingress"
 INGRESS_RESULT=$(cf_api PUT "/accounts/${CF_ACCOUNT}/cfd_tunnel/${TUNNEL_ID}/configurations" \
   -d "{\"config\":{\"ingress\":[
     {\"hostname\":\"${SUBDOMAIN}\",\"service\":\"http://localhost:${OC_PORT}\",\"originRequest\":{\"noTLSVerify\":true}},
@@ -188,14 +191,14 @@ check_cf_success "$INGRESS_RESULT" "configure ingress"
 ok "Ingress: ${SUBDOMAIN} → localhost:${OC_PORT}"
 
 # ── Step 4: Create DNS record ─────────────────────────────────────────────────
-header "Step 4/7: Creating DNS record"
+header "Step 4/8: Creating DNS record"
 DNS_RESULT=$(cf_api POST "/zones/${ZONE_ID}/dns_records" \
   -d "{\"type\":\"CNAME\",\"name\":\"${CLIENT_NAME}\",\"content\":\"${TUNNEL_ID}.cfargotunnel.com\",\"proxied\":true}")
 check_cf_success "$DNS_RESULT" "create DNS record"
 ok "DNS: ${SUBDOMAIN} → ${TUNNEL_ID}.cfargotunnel.com (proxied)"
 
 # ── Step 5: Start cloudflared service on VPS ─────────────────────────────────
-header "Step 5/7: Starting tunnel service on VPS"
+header "Step 5/8: Starting tunnel service on VPS"
 ssh "root@${VPS_IP}" "
   set -e
   cloudflared service install ${TUNNEL_TOKEN} 2>&1 | tail -2 || true
@@ -209,7 +212,7 @@ ssh "root@${VPS_IP}" "
 ok "cloudflared service active on VPS"
 
 # ── Step 6: Configure OpenClaw ────────────────────────────────────────────────
-header "Step 6/7: Configuring OpenClaw"
+header "Step 6/8: Configuring OpenClaw"
 ssh "root@${VPS_IP}" "python3 << 'PYEOF'
 import json, re, sys
 
@@ -252,8 +255,35 @@ echo \"openclaw service: \$STATUS\"
 [[ \"\$STATUS\" == 'active' ]] || { journalctl -u openclaw -n 20 --no-pager; exit 1; }"
 ok "OpenClaw configured and restarted"
 
-# ── Step 7: Create Cloudflare Access application ──────────────────────────────
-header "Step 7/7: Setting up Cloudflare Access"
+# ── Step 7: Install gws CLI + deploy skill ───────────────────────────────────
+header "Step 7/8: Installing gws CLI & deploying Google Workspace skill"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+ssh "root@${VPS_IP}" "
+  set -e
+  # Install gws CLI globally
+  if command -v gws >/dev/null 2>&1; then
+    echo 'gws CLI already installed: '\$(gws --version 2>&1 | head -1)
+  else
+    npm install -g @googleworkspace/cli
+    echo 'Installed gws CLI: '\$(gws --version 2>&1 | head -1)
+  fi
+
+  # Create skills directory if needed
+  mkdir -p /root/.openclaw/skills/gws/skills/gws
+"
+
+# Copy gws extension files to VPS
+scp "${REPO_ROOT}/ui/extensions/gws/openclaw.plugin.json" \
+    "root@${VPS_IP}:/root/.openclaw/skills/gws/openclaw.plugin.json"
+scp "${REPO_ROOT}/ui/extensions/gws/skills/gws/SKILL.md" \
+    "root@${VPS_IP}:/root/.openclaw/skills/gws/skills/gws/SKILL.md"
+
+ok "gws CLI installed, skill deployed to /root/.openclaw/skills/gws/"
+
+# ── Step 8: Create Cloudflare Access application ──────────────────────────────
+header "Step 8/8: Setting up Cloudflare Access"
 APP_RESULT=$(cf_api POST "/accounts/${CF_ACCOUNT}/access/apps" \
   -d "{\"name\":\"${CLIENT_NAME} Command Center\",\"domain\":\"${SUBDOMAIN}\",\"type\":\"self_hosted\",\"session_duration\":\"24h\"}")
 check_cf_success "$APP_RESULT" "create Access app"
