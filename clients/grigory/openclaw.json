@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.2.26",
+    "lastTouchedAt": "2026-03-12T14:15:06.739Z"
+  },
+  "env": {
+    "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}",
+    "GROQ_API_KEY": "${GROQ_API_KEY}"
+  },
+  "browser": {
+    "enabled": true,
+    "executablePath": "/usr/bin/chromium-browser",
+    "headless": true,
+    "noSandbox": true,
+    "defaultProfile": "openclaw",
+    "profiles": {
+      "openclaw": {
+        "cdpPort": 18800,
+        "color": "#FF6600"
+      }
+    }
+  },
+  "auth": {
+    "profiles": {
+      "anthropic:def": {
+        "provider": "anthropic",
+        "mode": "token"
+      },
+      "groq:default": {
+        "provider": "groq",
+        "mode": "token"
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "anthropic/claude-sonnet-4-6",
+        "fallbacks": [
+          "groq/llama-3.3-70b-versatile"
+        ]
+      },
+      "workspace": "/root/.openclaw/workspace",
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "heartbeat": {
+        "every": "5m"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      },
+      "models": {
+        "groq/llama-3.3-70b-versatile": {}
+      }
+    }
+  },
+  "tools": {
+    "web": {
+      "search": {
+        "enabled": true,
+        "provider": "brave",
+        "apiKey": "${BRAVE_API_KEY}"
+      }
+    },
+    "media": {
+      "audio": {
+        "enabled": true,
+        "scope": {
+          "default": "allow"
+        },
+        "timeoutSeconds": 1200,
+        "attachments": {
+          "mode": "all"
+        },
+        "models": [
+          {
+            "capabilities": [
+              "audio"
+            ],
+            "type": "cli",
+            "command": "/root/.openclaw/workspace/transcribe_local.py",
+            "args": [
+              "{file}"
+            ],
+            "timeoutSeconds": 1200,
+            "language": "ru"
+          }
+        ]
+      }
+    }
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "cron": {
+    "enabled": true,
+    "maxConcurrentRuns": 5
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "allowlist",
+      "botToken": "${TELEGRAM_BOT_TOKEN}",
+      "allowFrom": [
+        "313978390",
+        "201033637",
+        "7005089926"
+      ],
+      "groupAllowFrom": [
+        "313978390",
+        "201033637"
+      ],
+      "groupPolicy": "open",
+      "streaming": "partial",
+      "mediaMaxMb": 50
+    }
+  },
+  "gateway": {
+    "port": 19789,
+    "mode": "local",
+    "bind": "lan",
+    "trustedProxies": [
+      "127.0.0.1"
+    ],
+    "controlUi": {
+      "dangerouslyDisableDeviceAuth": true,
+      "allowedOrigins": [
+        "http://100.127.245.31:19789",
+        "https://100.127.245.31",
+        "https://grigory.belagent.com"
+      ]
+    },
+    "auth": {
+      "mode": "token",
+      "token": "${GATEWAY_TOKEN}",
+      "allowTailscale": true,
+      "rateLimit": {
+        "maxAttempts": 10,
+        "windowMs": 60000,
+        "lockoutMs": 300000
+      }
+    }
+  },
+  "skills": {
+    "load": {
+      "extraDirs": [
+        "/root/.openclaw/skills"
+      ]
+    }
+  },
+  "plugins": {
+    "entries": {
+      "device-pair": {
+        "enabled": true,
+        "config": {
+          "publicUrl": "wss://grigory.belagent.com"
+        }
+      },
+      "telegram": {
+        "enabled": true
+      }
+    }
+  }
+}

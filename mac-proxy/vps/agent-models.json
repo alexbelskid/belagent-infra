@@ -1,0 +1,14 @@
+{
+  "providers": {
+    "openai-codex": {
+      "baseUrl": "https://chatgpt.com/backend-api",
+      "api": "openai-codex-responses",
+      "models": []
+    },
+    "openai": {
+      "baseUrl": "http://localhost:8317/v1",
+      "api": "openai-completions",
+      "models": []
+    }
+  }
+}
