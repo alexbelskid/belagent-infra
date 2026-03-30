@@ -5,5 +5,6 @@ clients/*/.env
 .DS_Store
 .next/
 
-# Keep pre-built UI dist in openclaw/
+# Keep pre-built UI dist in repo
 # dist/
+!ui/dist/
