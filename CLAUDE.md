@@ -1,142 +1,127 @@
 # CLAUDE.md — Belagent Infrastructure Rules
 
-## 🔴 КРИТИЧЕСКОЕ ПРАВИЛО: НИКОГДА НЕ УДАЛЯТЬ ЭЛЕМЕНТЫ OPENCLAW
+## КРИТИЧЕСКОЕ ПРАВИЛО: НИКОГДА НЕ УДАЛЯТЬ ЭЛЕМЕНТЫ OPENCLAW
 
-Belagent — это **форк OpenClaw UI**, не замена. Все оригинальные настройки, маршруты, компоненты и API вызовы OpenClaw должны оставаться нетронутыми.
+Belagent использует **ванильный OpenClaw v2026.3.23+** с минимальными кастомизациями (CSS + skills). Все оригинальные настройки, маршруты, компоненты и API вызовы OpenClaw должны оставаться нетронутыми.
 
 ### Что ЗАПРЕЩЕНО:
-- ❌ Удалять любые существующие компоненты, страницы, роуты
-- ❌ Удалять или отключать API вызовы к gateway
-- ❌ Удалять настройки из конфига OpenClaw
-- ❌ Убирать функциональность (cron, sessions, skills, usage, connections, logs)
-- ❌ Хардкодить секреты (API ключи, токены, пароли) в файлы репозитория
+- Удалять любые существующие компоненты, страницы, роуты
+- Удалять или отключать API вызовы к gateway
+- Удалять настройки из конфига OpenClaw
+- Убирать функциональность (cron, sessions, skills, usage, connections, logs)
+- Хардкодить секреты (API ключи, токены, пароли, IP адреса клиентов) в файлы репозитория
+- Удалять файлы из репо без явного подтверждения пользователя
 
 ### Что РАЗРЕШЕНО:
-- ✅ Переименовывать элементы навигации (Sessions → Chat, Cron → Automations)
-- ✅ Перегруппировывать элементы (технические → в раздел Advanced)
-- ✅ Скрывать элементы через CSS/условный рендеринг (но не удалять код)
-- ✅ Добавлять новые компоненты (Graph, Tasks kanban)
-- ✅ Менять стили, цвета, иконки
-
-## Структура навигации
-
-```
-SIDEBAR (видимая часть):
-├── 💬 Chat          ← Sessions (переименовано)
-├── ✅ Tasks          ← новый компонент (kanban)
-├── ⚡ Automations   ← Cron (переименовано)
-├── 🕸️ Graph         ← новый компонент (d3-force memory graph)
-├── 🧩 Skills        ← Skills (оригинал)
-└── ⚙️ Advanced      ← АККОРДЕОН (свёрнут по умолчанию)
-    ├── Usage / Stats     ← оригинал
-    ├── Connections       ← оригинал
-    ├── Config / Settings ← оригинал
-    └── Logs              ← оригинал
-
-TOP BAR:
-├── Chat selector dropdown   ← новый
-└── Model selector dropdown  ← новый
-```
-
-## Принцип: HIDE, DON'T DELETE
-
-Если элемент не нужен в основном UI — перемещай в Advanced, но не удаляй. Пользователь (технический) должен иметь доступ ко всему через Advanced → раздел.
+- Добавлять CSS кастомизации в `belagent-hide.css`
+- Добавлять новые skills/extensions
+- Менять стили, цвета, иконки через CSS
+- Обновлять скрипты деплоя
 
 ## Repo structure
-- `ui/belagent-hide.css` — CSS injected into OpenClaw control-ui (hides brain/wrench/focus/cron buttons)
-- `ui/app.html` — standalone dashboard (pure HTML, works everywhere)
-- `ui/src/` — Lit/TS components for OpenClaw UI (activity-feed, connections, tasks)
-- `ui/extensions/` — OpenClaw skill plugins (gws, instagram)
-- `scripts/setup-client.sh` — one-command client deploy
-- `scripts/gws-auth.sh` — Google Workspace OAuth setup for a VPS
-- `mac-proxy/` — Mac CLIProxy tunnel files and VPS patches
-- `docs/` — architecture diagrams
 
-## Key architecture decisions
-- Cloudflare Tunnel -> nginx -> OpenClaw (18789)
-- UI is vanilla OpenClaw v2026.3.23-2 with belagent-hide.css branding
-- No auth on memory-server (bound to 127.0.0.1, only reachable via nginx)
+```
+belagent-infra/
+├── ui/
+│   ├── control-ui-dist/          # Точная копия UI с VPS (OpenClaw v2026.3.23-2)
+│   │   ├── index.html            # Entry point
+│   │   ├── belagent-hide.css     # CSS: скрывает brain/wrench/focus кнопки в чате
+│   │   ├── assets/               # JS/CSS бандлы OpenClaw (Lit, d3, etc.)
+│   │   └── favicon.*             # Иконки
+│   ├── belagent-hide.css         # Исходник CSS кастомизации
+│   ├── app.html                  # Standalone dashboard (pure HTML, эксперимент)
+│   ├── src/                      # Lit/TS компоненты (activity-feed, connections, tasks)
+│   └── extensions/               # OpenClaw skill plugins
+│       ├── gws/                  # Google Workspace (Gmail, Drive, Calendar, Sheets)
+│       └── instagram/            # Meta Graph API (posts, DMs, insights)
+├── scripts/
+│   ├── setup-client.sh           # One-command деплой нового клиента
+│   └── gws-auth.sh              # Google Workspace OAuth для VPS (interactive + export)
+├── mac-proxy/                    # Mac CLIProxy tunnel (autossh + ProxyPal)
+│   └── vps/                      # VPS-side конфиги (agent-models, patches)
+└── docs/                         # Архитектурные диаграммы
+```
 
-## Deploy to new client
+## Архитектура
+
+```
+Client browser
+  → Cloudflare Tunnel
+    → nginx (VPS)
+      → OpenClaw gateway (порт 18789)
+        → Control UI (Lit/TS SPA)
+        → WebSocket RPC API
+```
+
+- UI = ванильный OpenClaw control-ui + `belagent-hide.css`
+- Навигация: Chat, Tasks, Automations, Graph, Skills, ADVANCED (Usage, Connections, Settings, Logs)
+- Секреты только в systemd/env на VPS, не в репо
+
+## Деплой нового клиента
+
 ```bash
-./scripts/setup-client.sh --name clientname --vps IP --email client@email.com \
-  --cf-account ACCOUNT_ID --cf-zone ZONE_ID
+export CF_TOKEN=xxx CF_ACCOUNT=yyy CF_ZONE_ID=zzz
+./scripts/setup-client.sh --name clientname --vps IP --email client@email.com
+```
+
+Скрипт делает 8 шагов: cloudflared, tunnel, ingress, DNS, service, OpenClaw config, gws CLI + skill, Cloudflare Access.
+
+### Деплой UI на VPS
+
+```bash
+scp -r ui/control-ui-dist/* root@VPS_IP:/usr/lib/node_modules/openclaw/dist/control-ui/
 ```
 
 ## OpenClaw API
-- WebSocket RPC (not REST!)
-- Methods: cron.list, cron.add, sessions.list, config.get etc.
-- Control-UI assets: /usr/lib/node_modules/openclaw/dist/control-ui/
 
-## Key OpenClaw configs
-- gateway.controlUi.dangerouslyDisableDeviceAuth: true (removes pairing required)
-- plugins.entries.device-pair.config.publicUrl: wss://<CLIENT>.belagent.com
-- gateway.bind: lan (DO NOT change!)
+- WebSocket RPC (не REST!)
+- Методы: `cron.list`, `cron.add`, `sessions.list`, `config.get` и др.
+- Control-UI: `/usr/lib/node_modules/openclaw/dist/control-ui/`
 
-## Extensions (deploy to /root/.openclaw/skills/ on VPS)
-- `ui/extensions/gws/` — Google Workspace via gws CLI (Gmail, Drive, Calendar, Sheets)
-- `ui/extensions/instagram/` — Meta Graph API (posts, DMs, insights)
+## Ключевые конфиги OpenClaw
+
+- `gateway.controlUi.dangerouslyDisableDeviceAuth: true` — убирает device pairing
+- `plugins.entries.device-pair.config.publicUrl: wss://<CLIENT>.belagent.com`
+- `gateway.bind: lan` (НЕ МЕНЯТЬ!)
+
+## Extensions (деплоятся в /root/.openclaw/skills/ на VPS)
+
+- `ui/extensions/gws/` — Google Workspace через gws CLI
+- `ui/extensions/instagram/` — Meta Graph API (в разработке)
+
+### GWS OAuth на VPS
+
+```bash
+# Вариант 1: export с локальной машины
+./scripts/gws-auth.sh --vps IP --export
+
+# Вариант 2: интерактивно на VPS
+./scripts/gws-auth.sh --vps IP
+```
 
 ## Mac CLIProxy tunnel
 
-### Что это
-Mac (ProxyPal на :8317) → autossh reverse SSH → VPS localhost:8317 → OpenClaw openai провайдер.
-Позволяет использовать GPT/Claude подписки через Mac когда OAuth недоступен на VPS.
+Mac (ProxyPal :8317) → autossh reverse SSH → VPS localhost:8317 → OpenClaw openai провайдер.
 
-### Где конфиги
-- `mac-proxy/` — все файлы туннеля и VPS патчей
-- Секреты (OPENAI_API_KEY, пароли) — только в systemd/env на VPS, не в репо
-
-### При изменении VPS конфига OpenClaw
-1. Обновить `mac-proxy/vps/agent-models.json` — если меняется провайдер/baseUrl
-2. Обновить `mac-proxy/vps/apply-patch.sh` — если меняется логика применения
-3. Обновить `mac-proxy/vps/openclaw-config-patch.json` — если меняется структура openclaw.json
-
-### Добавление нового провайдера (Claude, Gemini)
-После авторизации на Mac (`ccs claude --auth` / `ccs gemini --auth`):
-1. Добавить провайдер в `mac-proxy/vps/agent-models.json`
-2. Добавить auth profile в `mac-proxy/vps/openclaw-config-patch.json`
-3. Применить на VPS: `bash mac-proxy/vps/apply-patch.sh`
+Конфиги: `mac-proxy/vps/agent-models.json`, `mac-proxy/vps/openclaw-config-patch.json`
 
 ## Валидация перед коммитом
 
-Перед каждым коммитом проверить:
-1. Все оригинальные роуты OpenClaw доступны (через Advanced если нужно)
-2. API вызовы к gateway не сломаны
-3. Sessions, Cron, Skills, Usage, Connections — всё работает
-4. Новые компоненты (Tasks, Graph) не конфликтуют с оригиналом
-5. Нет захардкоженных секретов в файлах
-
-### Проверка туннеля (на VPS)
-```bash
-ss -tlnp | grep 8317                        # туннель активен
-curl -s -H 'Authorization: Bearer proxypal-local' \
-  http://localhost:8317/v1/models | python3 -m json.tool | grep id
-```
-
-### Проверка autossh (на Mac)
-```bash
-launchctl list | grep autossh               # сервис запущен
-tail -20 /tmp/autossh-tunnel.log            # логи
-```
+1. Нет захардкоженных секретов, IP адресов, токенов клиентов
+2. Все оригинальные роуты OpenClaw доступны
+3. API вызовы к gateway не сломаны
+4. `belagent-hide.css` не ломает основной UI
 
 ## Стек
 
-- Lit (Web Components) — оригинальный фреймворк OpenClaw UI
-- d3-force — граф памяти
-- Vanilla JS — Tasks kanban
-- CSS custom properties — тема
-- autossh + launchd — постоянный SSH туннель (Mac)
-- ProxyPal / CCS CLIProxy — OAuth proxy для AI провайдеров
-
-## Репозитории
-
-- UI форк: `github.com/alexbelskid/openclaw` (ветка `belagent`)
-- Инфра: `github.com/alexbelskid/belagent-infra`
+- OpenClaw v2026.3.23+ — AI gateway + control UI
+- Lit (Web Components) — фреймворк UI
+- Cloudflare Tunnel + Access — проксирование и авторизация
+- autossh + launchd — SSH туннель с Mac
+- gws CLI — Google Workspace интеграция
 
 ## Pending tasks
-1. Deploy pending clients via setup-client.sh
-2. Instagram extension deploy
 
-# currentDate
-Today's date is 2026-03-30.
+1. Деплой alex.belagent.com (VPS 158.220.127.14, нужен CF_ZONE_ID)
+2. Instagram extension deploy
+3. Re-auth gws OAuth на VPS Григория (токен expired)
