@@ -71,7 +71,7 @@ TOP BAR:
 |--------|-----|-----|-----------|
 | Grigory | https://grigory.belagent.com | 89.167.22.91 | 74bc9f50-fed6-4af1-89c6-942ee7639177 |
 | Alex (Chedron) | https://alex.belagent.com | 158.220.127.14 | 172c202b-d1a8-4c02-982c-7d3dee6b97ee |
-| Lemuel | pending | 62.171.156.218 | — |
+| Lemuel (Promitei) | https://lemuel.belagent.com | 62.171.156.218 | 99e6e4e8-438d-4e25-91ff-0821b6a28800 |
 | Evgeny | pending | 84.247.180.25 | — |
 
 ## Mac CLIProxy туннель — правила работы

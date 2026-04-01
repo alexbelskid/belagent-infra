@@ -35,6 +35,7 @@ CLIENT_EMAIL=""
 CF_TOKEN="${CF_TOKEN:-}"   # Accept from environment; --cf-token overrides
 CF_ACCOUNT=""
 OC_PORT=""
+GEO_COUNTRIES=""           # No geo restriction by default; pass --country BY,RU to enable
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -44,8 +45,13 @@ while [[ $# -gt 0 ]]; do
     --cf-token) CF_TOKEN="$2";       shift 2 ;;
     --cf-account) CF_ACCOUNT="$2";  shift 2 ;;
     --port)     OC_PORT="$2";        shift 2 ;;
+    --country)  GEO_COUNTRIES="$2";  shift 2 ;;
     --help|-h)
-      echo "Usage: $0 --name NAME --vps IP --email EMAIL --cf-account ACCOUNT_ID [--cf-token TOKEN] [--port PORT]"
+      echo "Usage: $0 --name NAME --vps IP --email EMAIL --cf-account ACCOUNT_ID [--cf-token TOKEN] [--port PORT] [--country BY,RU]"
+      echo ""
+      echo "Options:"
+      echo "  --country  Comma-separated ISO country codes for geo restriction (disabled by default)"
+      echo "             Example: --country BY,RU"
       echo ""
       echo "The Cloudflare API token can also be set via the CF_TOKEN environment variable."
       echo "Using the env var is preferred: it won't appear in shell history or process listings."
@@ -254,17 +260,46 @@ ok "OpenClaw configured and restarted"
 
 # ── Step 7: Create Cloudflare Access application ──────────────────────────────
 header "Step 7/7: Setting up Cloudflare Access"
+
+# Load OTP provider ID if available
+OTP_FILE="$(cd "$(dirname "$0")/.." && pwd)/clients/cf-otp-provider-id.txt"
+OTP_IDP_CLAUSE=""
+if [[ -f "$OTP_FILE" ]]; then
+  OTP_ID=$(cat "$OTP_FILE")
+  OTP_IDP_CLAUSE=",\"allowed_idps\":[\"${OTP_ID}\"],\"auto_redirect_to_identity\":true"
+  log "Using OTP identity provider: ${OTP_ID}"
+else
+  warn "No OTP provider configured. Run cf-setup-otp.sh first for email OTP login."
+  warn "Proceeding with default Cloudflare login page."
+fi
+
 APP_RESULT=$(cf_api POST "/accounts/${CF_ACCOUNT}/access/apps" \
-  -d "{\"name\":\"${CLIENT_NAME} Command Center\",\"domain\":\"${SUBDOMAIN}\",\"type\":\"self_hosted\",\"session_duration\":\"24h\"}")
+  -d "{\"name\":\"${CLIENT_NAME} Command Center\",\"domain\":\"${SUBDOMAIN}\",\"type\":\"self_hosted\",\"session_duration\":\"24h\"${OTP_IDP_CLAUSE}}")
 check_cf_success "$APP_RESULT" "create Access app"
 APP_ID=$(echo "$APP_RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['id'])")
 [[ -n "$APP_ID" ]] || die "Failed to extract Access app ID"
 _APP_ID="$APP_ID"   # register for cleanup trap
 
+# Build policy with email include + optional geo restriction
+GEO_REQUIRE=""
+if [[ -n "$GEO_COUNTRIES" ]]; then
+  IFS=',' read -ra COUNTRIES <<< "$GEO_COUNTRIES"
+  GEO_RULES=""
+  for CC in "${COUNTRIES[@]}"; do
+    [[ -n "$GEO_RULES" ]] && GEO_RULES="${GEO_RULES},"
+    GEO_RULES="${GEO_RULES}{\"geo\":{\"country_code\":\"${CC}\"}}"
+  done
+  GEO_REQUIRE=",\"require\":[${GEO_RULES}]"
+  log "Geo restriction: ${GEO_COUNTRIES}"
+else
+  log "No geo restriction (pass --country to enable)"
+fi
+
 POLICY_RESULT=$(cf_api POST "/accounts/${CF_ACCOUNT}/access/apps/${APP_ID}/policies" \
-  -d "{\"name\":\"Client Only\",\"decision\":\"allow\",\"precedence\":1,\"include\":[{\"email\":{\"email\":\"${CLIENT_EMAIL}\"}}]}")
+  -d "{\"name\":\"Client Only\",\"decision\":\"allow\",\"precedence\":1,\"include\":[{\"email\":{\"email\":\"${CLIENT_EMAIL}\"}}]${GEO_REQUIRE}}")
 check_cf_success "$POLICY_RESULT" "create Access policy"
-ok "Access policy created — allowed: ${CLIENT_EMAIL}"
+POLICY_ID=$(echo "$POLICY_RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['id'])" 2>/dev/null || echo "")
+ok "Access policy created — allowed: ${CLIENT_EMAIL}${GEO_COUNTRIES:+ (geo: ${GEO_COUNTRIES})}"
 
 # ── Write client config record ────────────────────────────────────────────────
 CONFIG_DIR="$(cd "$(dirname "$0")/.." && pwd)/clients/${CLIENT_NAME}"
@@ -281,7 +316,9 @@ cat > "$CONFIG_FILE" << EOF
 | OpenClaw Port | ${OC_PORT} |
 | CF Tunnel ID  | ${TUNNEL_ID} |
 | CF Access App | ${APP_ID} |
+| CF Policy ID  | ${POLICY_ID:-unknown} |
 | Email         | ${CLIENT_EMAIL} |
+| Geo Restrict  | ${GEO_COUNTRIES} |
 | Deployed      | $(date -u +%Y-%m-%dT%H:%M:%SZ) |
 
 ## Get dashboard token
