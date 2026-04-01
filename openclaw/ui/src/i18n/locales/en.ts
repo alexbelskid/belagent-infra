@@ -45,6 +45,10 @@ export const en: TranslationMap = {
     aiAgents: "AI & Agents",
     debug: "Debug",
     logs: "Logs",
+    graph: "Graph",
+    activity: "Activity",
+    appflowy: "AppFlowy",
+    connections: "Connections",
   },
   subtitles: {
     agents: "Workspaces, tools, identities.",
@@ -65,6 +69,10 @@ export const en: TranslationMap = {
     aiAgents: "Agents, models, skills, tools, memory, session.",
     debug: "Snapshots, events, RPC.",
     logs: "Live gateway logs.",
+    graph: "Memory graph visualization.",
+    activity: "Recent agent activity.",
+    appflowy: "Tasks, docs, and boards.",
+    connections: "Integrations and services.",
   },
   overview: {
     access: {
