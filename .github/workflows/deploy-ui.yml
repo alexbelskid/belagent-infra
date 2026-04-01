@@ -1,0 +1,98 @@
+name: Deploy Belagent UI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ui/dist/**'
+      - '.github/workflows/deploy-ui.yml'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Deploy to specific VPS (or "all")'
+        required: false
+        default: 'all'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        vps:
+          - { name: grigory, ip: '89.167.22.91' }
+          - { name: alex, ip: '158.220.127.14' }
+          - { name: lemuel, ip: '62.171.156.218' }
+    steps:
+      - name: Skip if not targeted
+        if: >-
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.target != 'all' &&
+          github.event.inputs.target != matrix.vps.name
+        run: echo "Skipping ${{ matrix.vps.name }}" && exit 0
+
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.BELAGENT_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ matrix.vps.ip }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy UI to ${{ matrix.vps.name }}
+        env:
+          VPS_IP: ${{ matrix.vps.ip }}
+          SSH_OPTS: '-i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new'
+        run: |
+          # Find OpenClaw UI path
+          CONTROL_UI_PATH=$(ssh $SSH_OPTS root@$VPS_IP '
+            for p in /usr/lib/node_modules/openclaw/dist/control-ui \
+                     /usr/local/lib/node_modules/openclaw/dist/control-ui; do
+              [[ -d "$p" ]] && echo "$p" && exit 0
+            done
+            echo NOT_FOUND
+          ')
+
+          if [[ "$CONTROL_UI_PATH" == "NOT_FOUND" ]]; then
+            echo "::error::OpenClaw control-ui not found on $VPS_IP"
+            exit 1
+          fi
+
+          echo "Target: $CONTROL_UI_PATH"
+
+          # Backup original (first time only)
+          ssh $SSH_OPTS root@$VPS_IP "
+            [[ -f ${CONTROL_UI_PATH}/index.html.bak ]] || \
+              cp ${CONTROL_UI_PATH}/index.html ${CONTROL_UI_PATH}/index.html.bak
+          "
+
+          # Rsync UI
+          rsync -az --delete \
+            --exclude='*.map' \
+            --exclude='index.html.bak' \
+            -e "ssh $SSH_OPTS" \
+            ui/dist/ root@$VPS_IP:$CONTROL_UI_PATH/
+
+          echo "Restarting OpenClaw..."
+          ssh $SSH_OPTS root@$VPS_IP 'systemctl restart openclaw'
+          sleep 5
+
+          # Detect port from config
+          PORT=$(ssh $SSH_OPTS root@$VPS_IP "python3 -c \"
+          import json
+          with open('/root/.openclaw/openclaw.json') as f:
+              print(json.load(f)['gateway']['port'])
+          \"")
+
+          # Health check
+          HTTP_CODE=$(ssh $SSH_OPTS root@$VPS_IP \
+            "curl -sf -o /dev/null -w '%{http_code}' http://127.0.0.1:$PORT/ 2>/dev/null || echo 000")
+
+          if [[ "$HTTP_CODE" == "200" ]]; then
+            echo "✅ ${{ matrix.vps.name }} ($VPS_IP) — UI deployed, port $PORT OK"
+          else
+            echo "::error::${{ matrix.vps.name }} returned HTTP $HTTP_CODE on port $PORT"
+            ssh $SSH_OPTS root@$VPS_IP 'journalctl -u openclaw -n 15 --no-pager' || true
+            exit 1
+          fi
