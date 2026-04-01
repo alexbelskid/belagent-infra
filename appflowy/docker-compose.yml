@@ -77,7 +77,8 @@ services:
         condition: service_healthy
     environment:
       # Database
-      GOTRUE_DATABASE_URL: postgres://${POSTGRES_USER:-appflowy}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-appflowy}?search_path=auth
+      GOTRUE_DB_DRIVER: postgres
+      DATABASE_URL: postgres://${POSTGRES_USER:-appflowy}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-appflowy}?search_path=auth
 
       # JWT
       GOTRUE_JWT_SECRET: ${GOTRUE_JWT_SECRET:?Set GOTRUE_JWT_SECRET}
@@ -96,6 +97,10 @@ services:
       # Admin user (created on first boot)
       GOTRUE_ADMIN_EMAIL: ${GOTRUE_ADMIN_EMAIL:?Set GOTRUE_ADMIN_EMAIL}
       GOTRUE_ADMIN_PASSWORD: ${GOTRUE_ADMIN_PASSWORD:?Set GOTRUE_ADMIN_PASSWORD}
+
+      # Port
+      PORT: 9999
+      GOTRUE_API_HOST: "0.0.0.0"
 
       # OAuth — all disabled by default
       GOTRUE_EXTERNAL_GOOGLE_ENABLED: "false"
@@ -124,6 +129,11 @@ services:
     environment:
       APPFLOWY_ENVIRONMENT: production
       RUST_LOG: ${RUST_LOG:-info}
+
+      # URLs
+      APPFLOWY_WEB_URL: ${SCHEME:-http}://${FQDN:-localhost}
+      APPFLOWY_BASE_URL: ${SCHEME:-http}://${FQDN:-localhost}
+      APPFLOWY_WEBSOCKET_BASE_URL: ${WS_SCHEME:-ws}://${FQDN:-localhost}/ws/v2
 
       # Database
       APPFLOWY_DATABASE_URL: postgres://${POSTGRES_USER:-appflowy}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-appflowy}
@@ -166,6 +176,10 @@ services:
     depends_on:
       appflowy_cloud:
         condition: service_healthy
+    environment:
+      APPFLOWY_BASE_URL: ${SCHEME:-http}://${FQDN:-localhost}
+      APPFLOWY_WS_BASE_URL: ${WS_SCHEME:-ws}://${FQDN:-localhost}/ws/v2
+      APPFLOWY_GOTRUE_BASE_URL: ${SCHEME:-http}://${FQDN:-localhost}/gotrue
     networks:
       - appflowy_net
 
