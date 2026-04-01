@@ -139,6 +139,43 @@ npm install -g openclaw@latest   # на VPS
 - autossh + launchd — постоянный SSH туннель (Mac)
 - ProxyPal / CCS CLIProxy — OAuth proxy для AI провайдеров
 
+## AppFlowy Cloud — per-client task management
+
+### Что это
+Self-hosted AppFlowy Cloud (Docker Compose) на каждом клиентском VPS.
+Notion-подобные задачи, доски, документы. Агент работает через MCP server, пользователь — через web UI (iframe в сайдбаре).
+
+### Архитектура
+- Docker Compose стек в `/opt/appflowy/` на каждом VPS
+- nginx проксирует `/appflowy/*` → AppFlowy (порт 8025)
+- Агент использует `appflowy` MCP сервер для CRUD задач
+- Web UI встроен как iframe во вкладку "AppFlowy" в сайдбаре
+
+### Файлы
+- `appflowy/docker-compose.yml` — шаблон Docker стека
+- `appflowy/.env.example` — шаблон переменных окружения
+- `appflowy/nginx.conf` — внутренний nginx AppFlowy
+- `scripts/deploy-appflowy.sh` — скрипт деплоя
+- `mcp-servers/appflowy-mcp/` — MCP сервер для агента
+- `.agents/skills/appflowy-taskboard/SKILL.md` — skill-документация для агента
+- `openclaw/ui/src/ui/views/appflowy-embed.ts` — UI компонент (iframe)
+
+### Деплой на клиентский VPS
+```bash
+./scripts/deploy-appflowy.sh <client_name> <vps_ip>
+```
+
+### Проверка на VPS
+```bash
+docker compose -f /opt/appflowy/docker-compose.yml ps
+curl -s http://localhost:8025/api/health
+curl -s http://localhost:80/appflowy/
+```
+
+### Минимальные требования
+- 4GB RAM на VPS (AppFlowy добавляет ~1GB к существующим сервисам)
+- Docker + Docker Compose (устанавливаются автоматически при деплое)
+
 ## Репозитории
 
 - UI форк: `github.com/alexbelskid/openclaw` (ветка `belagent`)

@@ -1,6 +1,7 @@
 node_modules/
 .env
 clients/*/.env
+clients/*/appflowy-secrets.env
 *.log
 .DS_Store
 .next/

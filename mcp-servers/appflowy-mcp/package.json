@@ -1,0 +1,11 @@
+{
+  "name": "appflowy-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP server for AppFlowy Cloud — agent can manage tasks, databases, and documents",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

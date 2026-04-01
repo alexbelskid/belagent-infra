@@ -5,7 +5,7 @@ export const TAB_GROUPS = [
   { label: "chat", tabs: ["chat"] },
   {
     label: "belagent",
-    tabs: ["graph", "activity", "connections"],
+    tabs: ["graph", "activity", "appflowy", "connections"],
   },
   {
     label: "control",
@@ -41,6 +41,7 @@ export type Tab =
   | "graph"
   | "activity"
   | "connections"
+  | "appflowy"
   | "config"
   | "communications"
   | "appearance"
@@ -64,6 +65,7 @@ const TAB_PATHS: Record<Tab, string> = {
   graph: "/graph",
   activity: "/activity",
   connections: "/connections",
+  appflowy: "/appflowy-view",
   config: "/config",
   communications: "/communications",
   appearance: "/appearance",
@@ -179,6 +181,8 @@ export function iconForTab(tab: Tab): IconName {
       return "barChart";
     case "connections":
       return "link";
+    case "appflowy":
+      return "grid";
     case "skills":
       return "zap";
     case "nodes":

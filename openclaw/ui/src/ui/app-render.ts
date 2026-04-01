@@ -126,6 +126,7 @@ const lazyAgents = createLazy(() => import("./views/agents.ts"));
 const lazyActivityFeed = createLazy(() => import("./views/activity-feed.ts"));
 const lazyGraph = createLazy(() => import("./views/graph.ts"));
 const lazyConnections = createLazy(() => import("./views/connections.ts"));
+const lazyAppFlowy = createLazy(() => import("./views/appflowy-embed.ts"));
 const lazyChannels = createLazy(() => import("./views/channels.ts"));
 const lazyCron = createLazy(() => import("./views/cron.ts"));
 const lazyDebug = createLazy(() => import("./views/debug.ts"));
@@ -895,6 +896,12 @@ export function renderApp(state: AppViewState) {
                   onConnect: (id) => app.navigate(pathForTab("channels", state.basePath)),
                   onConfigure: (id) => app.navigate(pathForTab("channels", state.basePath)),
                 }))
+            : nothing}
+
+        ${
+          state.tab === "appflowy"
+            ? lazyRender(lazyAppFlowy, (m) =>
+                m.renderAppFlowyEmbed({}))
             : nothing}
 
         ${
