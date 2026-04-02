@@ -126,6 +126,7 @@ const lazyAgents = createLazy(() => import("./views/agents.ts"));
 const lazyActivityFeed = createLazy(() => import("./views/activity-feed.ts"));
 const lazyGraph = createLazy(() => import("./views/graph.ts"));
 const lazyConnections = createLazy(() => import("./views/connections.ts"));
+const lazyKanban = createLazy(() => import("./views/kanban.ts"));
 const lazyChannels = createLazy(() => import("./views/channels.ts"));
 const lazyCron = createLazy(() => import("./views/cron.ts"));
 const lazyDebug = createLazy(() => import("./views/debug.ts"));
@@ -465,7 +466,7 @@ export function renderApp(state: AppViewState) {
                         <img class="sidebar-brand__logo" src="${agentLogoUrl(basePath)}" alt="OpenClaw" />
                         <span class="sidebar-brand__copy">
                           <span class="sidebar-brand__eyebrow">${t("nav.control")}</span>
-                          <span class="sidebar-brand__title">OpenClaw</span>
+                          <span class="sidebar-brand__title belagent-logo">Belagent</span>
                         </span>
                       `
                 }
@@ -895,6 +896,11 @@ export function renderApp(state: AppViewState) {
                   onConnect: (id) => app.navigate(pathForTab("channels", state.basePath)),
                   onConfigure: (id) => app.navigate(pathForTab("channels", state.basePath)),
                 }))
+            : nothing}
+
+        ${
+          state.tab === "appflowy"
+            ? lazyRender(lazyKanban, (m) => m.renderKanban())
             : nothing}
 
         ${

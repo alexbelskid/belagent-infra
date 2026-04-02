@@ -19,6 +19,8 @@ export const en: TranslationMap = {
   },
   nav: {
     chat: "Chat",
+    belagent: "",
+    advanced: "Advanced",
     control: "Control",
     agent: "Agent",
     settings: "Settings",
@@ -37,6 +39,8 @@ export const en: TranslationMap = {
     skills: "Skills",
     nodes: "Nodes",
     chat: "Chat",
+    belagent: "",
+    advanced: "Advanced",
     config: "Config",
     communications: "Communications",
     appearance: "Appearance",
@@ -45,6 +49,7 @@ export const en: TranslationMap = {
     aiAgents: "AI & Agents",
     debug: "Debug",
     logs: "Logs",
+    appflowy: "AppFlowy",
   },
   subtitles: {
     agents: "Workspaces, tools, identities.",
@@ -65,6 +70,7 @@ export const en: TranslationMap = {
     aiAgents: "Agents, models, skills, tools, memory, session.",
     debug: "Snapshots, events, RPC.",
     logs: "Live gateway logs.",
+    appflowy: "Project management and tasks.",
   },
   overview: {
     access: {

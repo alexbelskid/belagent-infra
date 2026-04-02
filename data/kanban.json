@@ -1,0 +1,41 @@
+{
+  "columns": [
+    {
+      "id": "todo",
+      "title": "To Do",
+      "order": 0
+    },
+    {
+      "id": "in-progress",
+      "title": "In Progress",
+      "order": 1
+    },
+    {
+      "id": "done",
+      "title": "Done",
+      "order": 2
+    }
+  ],
+  "cards": [
+    {
+      "id": "231ea8834294",
+      "columnId": "done",
+      "title": "Test kanban card",
+      "description": "Verifying drag & drop",
+      "assignee": "Alex",
+      "priority": "high",
+      "createdAt": "2026-04-02T21:36:46.637Z",
+      "order": 0
+    },
+    {
+      "id": "285ad840acf3",
+      "columnId": "todo",
+      "title": "dd",
+      "description": "ssd",
+      "assignee": "ss",
+      "priority": "high",
+      "createdAt": "2026-04-02T22:06:11.047Z",
+      "order": 0
+    }
+  ]
+}

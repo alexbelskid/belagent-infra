@@ -5,25 +5,11 @@ export const TAB_GROUPS = [
   { label: "chat", tabs: ["chat"] },
   {
     label: "belagent",
-    tabs: ["graph", "activity", "connections"],
+    tabs: ["sessions", "cron", "graph", "skills", "appflowy"],
   },
   {
-    label: "control",
-    tabs: ["overview", "channels", "instances", "sessions", "usage", "cron"],
-  },
-  { label: "agent", tabs: ["agents", "skills", "nodes"] },
-  {
-    label: "settings",
-    tabs: [
-      "config",
-      "communications",
-      "appearance",
-      "automation",
-      "infrastructure",
-      "aiAgents",
-      "debug",
-      "logs",
-    ],
+    label: "advanced",
+    tabs: ["usage", "connections", "config", "logs"],
   },
 ] as const;
 
@@ -41,6 +27,7 @@ export type Tab =
   | "graph"
   | "activity"
   | "connections"
+  | "appflowy"
   | "config"
   | "communications"
   | "appearance"
@@ -64,6 +51,7 @@ const TAB_PATHS: Record<Tab, string> = {
   graph: "/graph",
   activity: "/activity",
   connections: "/connections",
+  appflowy: "/appflowy-view",
   config: "/config",
   communications: "/communications",
   appearance: "/appearance",
@@ -177,6 +165,8 @@ export function iconForTab(tab: Tab): IconName {
       return "network";
     case "activity":
       return "barChart";
+    case "appflowy":
+      return "grid";
     case "connections":
       return "link";
     case "skills":
@@ -204,8 +194,35 @@ export function iconForTab(tab: Tab): IconName {
   }
 }
 
+const BELAGENT_LABELS: Record<Tab, string> = {
+  chat: "Chat",
+  sessions: "Tasks",
+  cron: "Automations",
+  graph: "Graph",
+  skills: "Skills",
+  usage: "Usage",
+  connections: "Connections",
+  config: "Settings",
+  logs: "Logs",
+  appflowy: "Tasks",
+  agents: "Agents",
+  overview: "Overview",
+  channels: "Channels",
+  instances: "Instances",
+  sessions: "Sessions",
+  cron: "Cron Jobs",
+  nodes: "Nodes",
+  communications: "Communications",
+  appearance: "Appearance",
+  automation: "Automation",
+  infrastructure: "Infrastructure",
+  aiAgents: "AI & Agents",
+  debug: "Debug",
+  activity: "Activity",
+};
+
 export function titleForTab(tab: Tab) {
-  return t(`tabs.${tab}`);
+  return BELAGENT_LABELS[tab] ?? t(`tabs.${tab}`);
 }
 
 export function subtitleForTab(tab: Tab) {
