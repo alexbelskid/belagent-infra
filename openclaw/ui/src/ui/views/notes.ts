@@ -72,8 +72,8 @@ interface NoteSummary {
 
 const API = "/api/notes";
 const TAG_PALETTE = [
-  "#C8001E","#6B7280","#B2CACB","#4B5563","#A0001A",
-  "#8CA3A4","#374151","#556B6C","#9BA5AD","#E00022",
+  "#C8001E","#8A8A8A","#E06070","#666666","#A0001A",
+  "#707070","#404040","#B0B0B0","#D04040","#E00022",
 ];
 function tagColor(t: string): string {
   let h = 0;
@@ -129,13 +129,13 @@ export class NotesView extends LitElement {
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
         "Helvetica Neue", sans-serif;
-      color: #ECEEF4;
+      color: #F0F0F0;
       -webkit-font-smoothing: antialiased;
     }
     .root {
       display: flex;
       height: 100%;
-      background: #0B0F0B;
+      background: #0D0D0D;
     }
 
     /* ── Sidebar ── */
@@ -155,7 +155,7 @@ export class NotesView extends LitElement {
       border-bottom: 1px solid rgba(255,255,255,0.06);
     }
     .sidebar-head h3 {
-      margin: 0; font-size: 14px; font-weight: 600; color: #F5F6FA;
+      margin: 0; font-size: 14px; font-weight: 600; color: #F5F5F5;
     }
     .sidebar-search { padding: 8px 12px; }
     .sidebar-search input {
@@ -164,14 +164,14 @@ export class NotesView extends LitElement {
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 8px;
       padding: 7px 10px;
-      color: #ECEEF4;
+      color: #F0F0F0;
       font-size: 12px;
       font-family: inherit;
       outline: none;
       box-sizing: border-box;
     }
     .sidebar-search input:focus { border-color: rgba(200,0,30,0.5); }
-    .sidebar-search input::placeholder { color: #4B5563; }
+    .sidebar-search input::placeholder { color: #666666; }
     .note-list { flex: 1; overflow-y: auto; padding: 4px 8px; }
     .note-item {
       padding: 10px 12px;
@@ -183,11 +183,11 @@ export class NotesView extends LitElement {
     .note-item:hover { background: rgba(255,255,255,0.04); }
     .note-item.active { background: rgba(200,0,30,0.12); }
     .note-item-title {
-      font-size: 13px; font-weight: 500; color: #F5F6FA;
+      font-size: 13px; font-weight: 500; color: #F5F5F5;
       display: flex; align-items: center; gap: 6px;
     }
     .note-item-icon { font-size: 15px; }
-    .note-item-date { font-size: 11px; color: #4B5563; margin-top: 3px; }
+    .note-item-date { font-size: 11px; color: #666666; margin-top: 3px; }
 
     /* ── Editor area ── */
     .editor-area {
@@ -195,7 +195,7 @@ export class NotesView extends LitElement {
     }
     .editor-empty {
       flex: 1; display: flex; align-items: center; justify-content: center;
-      color: #4B5563; font-size: 14px; flex-direction: column; gap: 12px;
+      color: #666666; font-size: 14px; flex-direction: column; gap: 12px;
     }
 
     /* ── Toolbar row (save indicator + AI + mode toggle) ── */
@@ -206,9 +206,9 @@ export class NotesView extends LitElement {
       gap: 8px; flex-shrink: 0;
     }
     .save-indicator {
-      font-size: 11px; color: #4B5563; margin-left: auto;
+      font-size: 11px; color: #666666; margin-left: auto;
     }
-    .save-indicator.saving { color: #B2CACB; }
+    .save-indicator.saving { color: #8A8A8A; }
 
     /* ── Markdown formatting toolbar ── */
     .md-toolbar {
@@ -223,7 +223,7 @@ export class NotesView extends LitElement {
     .md-btn {
       background: transparent;
       border: none;
-      color: #6B7280;
+      color: #8A8A8A;
       cursor: pointer;
       font-size: 12px;
       font-family: "SF Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
@@ -234,7 +234,7 @@ export class NotesView extends LitElement {
       white-space: nowrap;
     }
     .md-btn:hover {
-      color: #ECEEF4;
+      color: #F0F0F0;
       background: rgba(255,255,255,0.06);
     }
     .md-sep {
@@ -249,69 +249,69 @@ export class NotesView extends LitElement {
       flex: 1; overflow-y: auto; padding: 28px 40px 60px; max-width: 780px;
     }
     .editor-title {
-      font-size: 32px; font-weight: 700; color: #F5F6FA; border: none;
+      font-size: 32px; font-weight: 700; color: #F5F5F5; border: none;
       background: transparent; outline: none; width: 100%;
       font-family: inherit; padding: 0; margin-bottom: 8px;
       line-height: 1.3; letter-spacing: -0.02em;
     }
-    .editor-title::placeholder { color: #252A25; }
+    .editor-title::placeholder { color: #2A2A2A; }
     .editor-tags-row {
       display: flex; align-items: center; gap: 6px; margin-bottom: 20px; flex-wrap: wrap;
     }
     .editor-tags-row input {
-      background: transparent; border: none; color: #6B7280;
+      background: transparent; border: none; color: #8A8A8A;
       font-size: 12px; outline: none; min-width: 120px;
       font-family: inherit; padding: 2px 0;
     }
-    .editor-tags-row input::placeholder { color: #252A25; }
+    .editor-tags-row input::placeholder { color: #2A2A2A; }
     .tag-pill {
       font-size: 11px; font-weight: 500; padding: 2px 10px;
       border-radius: 12px; color: #fff;
     }
     .editor-content {
       width: 100%; min-height: 400px; background: transparent;
-      border: none; color: #ECEEF4; font-size: 15px;
+      border: none; color: #F0F0F0; font-size: 15px;
       font-family: "SF Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
       line-height: 1.7; outline: none; resize: none; padding: 0;
       tab-size: 2;
     }
-    .editor-content::placeholder { color: #252A25; }
+    .editor-content::placeholder { color: #2A2A2A; }
 
     /* ── Markdown preview ── */
     .md-preview {
       font-size: 15px;
       line-height: 1.7;
-      color: #ECEEF4;
+      color: #F0F0F0;
       min-height: 400px;
     }
     .md-preview h1 {
-      font-size: 28px; font-weight: 700; color: #F5F6FA;
+      font-size: 28px; font-weight: 700; color: #F5F5F5;
       margin: 24px 0 12px; padding-bottom: 6px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
     .md-preview h2 {
-      font-size: 22px; font-weight: 600; color: #F5F6FA;
+      font-size: 22px; font-weight: 600; color: #F5F5F5;
       margin: 20px 0 10px; padding-bottom: 4px;
       border-bottom: 1px solid rgba(255,255,255,0.06);
     }
     .md-preview h3 {
-      font-size: 18px; font-weight: 600; color: #F5F6FA;
+      font-size: 18px; font-weight: 600; color: #F5F5F5;
       margin: 16px 0 8px;
     }
     .md-preview h4, .md-preview h5, .md-preview h6 {
-      font-size: 15px; font-weight: 600; color: #F5F6FA;
+      font-size: 15px; font-weight: 600; color: #F5F5F5;
       margin: 14px 0 6px;
     }
     .md-preview p { margin: 0 0 12px; }
-    .md-preview a { color: #B2CACB; text-decoration: none; }
+    .md-preview a { color: #C8001E; text-decoration: none; }
     .md-preview a:hover { text-decoration: underline; }
-    .md-preview strong { color: #F5F6FA; font-weight: 600; }
+    .md-preview strong { color: #F5F5F5; font-weight: 600; }
     .md-preview em { font-style: italic; }
     .md-preview blockquote {
       border-left: 3px solid #C8001E;
       margin: 12px 0;
       padding: 4px 16px;
-      color: #6B7280;
+      color: #8A8A8A;
       background: rgba(200,0,30,0.06);
       border-radius: 0 6px 6px 0;
     }
@@ -329,10 +329,10 @@ export class NotesView extends LitElement {
       background: rgba(255,255,255,0.06);
       padding: 2px 6px;
       border-radius: 4px;
-      color: #F5F6FA;
+      color: #F5F5F5;
     }
     .md-preview pre.hljs {
-      background: #121612;
+      background: #1A1A1A;
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 8px;
       padding: 16px 18px;
@@ -345,7 +345,7 @@ export class NotesView extends LitElement {
       background: transparent;
       padding: 0;
       font-size: inherit;
-      color: #ECEEF4;
+      color: #F0F0F0;
     }
     .md-preview table {
       width: 100%;
@@ -360,7 +360,7 @@ export class NotesView extends LitElement {
     .md-preview th {
       background: rgba(255,255,255,0.04);
       font-weight: 600;
-      color: #F5F6FA;
+      color: #F5F5F5;
     }
     .md-preview hr {
       border: none;
@@ -373,15 +373,15 @@ export class NotesView extends LitElement {
     }
 
     /* ── highlight.js token colors (GitHub-dark inspired) ── */
-    .hljs { color: #ECEEF4; }
+    .hljs { color: #F0F0F0; }
     .hljs-keyword, .hljs-selector-tag, .hljs-built_in { color: #ff7b72; }
     .hljs-string, .hljs-attr { color: #a5d6ff; }
     .hljs-number, .hljs-literal { color: #79c0ff; }
     .hljs-function, .hljs-title { color: #d2a8ff; }
-    .hljs-comment, .hljs-quote { color: #6B7280; font-style: italic; }
+    .hljs-comment, .hljs-quote { color: #8A8A8A; font-style: italic; }
     .hljs-type, .hljs-class { color: #ffa657; }
     .hljs-variable, .hljs-template-variable { color: #ffa657; }
-    .hljs-params { color: #ECEEF4; }
+    .hljs-params { color: #F0F0F0; }
     .hljs-regexp { color: #7ee787; }
     .hljs-meta { color: #79c0ff; }
     .hljs-tag { color: #7ee787; }
@@ -399,24 +399,24 @@ export class NotesView extends LitElement {
     .btn-primary { background: #C8001E; color: #fff; padding: 8px 14px; }
     .btn-primary:hover { background: #A0001A; }
     .btn-secondary {
-      background: rgba(255,255,255,0.06); color: #ECEEF4;
+      background: rgba(255,255,255,0.06); color: #F0F0F0;
       padding: 8px 12px; border: 1px solid rgba(255,255,255,0.08);
     }
     .btn-secondary:hover { background: rgba(255,255,255,0.1); }
     .btn-secondary.active {
-      background: rgba(200,0,30,0.15); color: #B2CACB;
+      background: rgba(200,0,30,0.15); color: #C8001E;
       border-color: rgba(200,0,30,0.3);
     }
-    .btn-ghost { background: transparent; color: #4B5563; padding: 5px 8px; }
-    .btn-ghost:hover { color: #ECEEF4; background: rgba(255,255,255,0.06); }
+    .btn-ghost { background: transparent; color: #666666; padding: 5px 8px; }
+    .btn-ghost:hover { color: #F0F0F0; background: rgba(255,255,255,0.06); }
     .btn-danger { background: #C8001E; color: #fff; padding: 8px 16px; }
     .btn-danger:hover { background: #A0001A; }
     .btn-sm { font-size: 12px; padding: 4px 8px; border-radius: 6px; }
     .btn-amber {
-      background: rgba(178,202,203,0.15); color: #B2CACB;
-      padding: 6px 12px; border: 1px solid rgba(178,202,203,0.2);
+      background: rgba(200,0,30,0.15); color: #C8001E;
+      padding: 6px 12px; border: 1px solid rgba(200,0,30,0.2);
     }
-    .btn-amber:hover { background: rgba(178,202,203,0.25); }
+    .btn-amber:hover { background: rgba(200,0,30,0.25); }
 
     /* ── Overlay / dialogs ── */
     .overlay {
@@ -428,18 +428,18 @@ export class NotesView extends LitElement {
     }
     @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
     .confirm {
-      background: #121612; border: 1px solid rgba(255,255,255,0.08);
+      background: #1A1A1A; border: 1px solid rgba(255,255,255,0.08);
       border-radius: 14px; padding: 28px; width: 360px; text-align: center;
       box-shadow: 0 24px 80px rgba(0,0,0,0.6);
     }
-    .confirm p { color: #ECEEF4; font-size: 14px; margin: 0 0 20px; line-height: 1.5; }
+    .confirm p { color: #F0F0F0; font-size: 14px; margin: 0 0 20px; line-height: 1.5; }
     .confirm-btns { display: flex; gap: 8px; justify-content: center; }
 
     .toast {
       position: fixed; bottom: 28px; right: 28px;
-      background: #121612; border: 1px solid rgba(200,0,30,0.3);
+      background: #1A1A1A; border: 1px solid rgba(200,0,30,0.3);
       border-radius: 12px; padding: 14px 22px;
-      color: #ECEEF4; font-size: 13px; z-index: 10001;
+      color: #F0F0F0; font-size: 13px; z-index: 10001;
       box-shadow: 0 8px 40px rgba(0,0,0,0.4);
       animation: toastIn 0.25s ease-out;
     }
@@ -455,7 +455,7 @@ export class NotesView extends LitElement {
     .mode-toggle button {
       background: transparent;
       border: none;
-      color: #6B7280;
+      color: #8A8A8A;
       font-size: 12px;
       font-weight: 500;
       font-family: inherit;
@@ -463,10 +463,10 @@ export class NotesView extends LitElement {
       cursor: pointer;
       transition: all 0.12s;
     }
-    .mode-toggle button:hover { color: #ECEEF4; }
+    .mode-toggle button:hover { color: #F0F0F0; }
     .mode-toggle button.active {
       background: rgba(200,0,30,0.15);
-      color: #B2CACB;
+      color: #C8001E;
     }
   `;
 
@@ -643,7 +643,7 @@ export class NotesView extends LitElement {
   // ── Render ────────────────────────────────────────────────
   render() {
     if (this.loading) {
-      return html`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#4B5563">Loading\u2026</div>`;
+      return html`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666666">Loading\u2026</div>`;
     }
 
     return html`
@@ -671,7 +671,7 @@ export class NotesView extends LitElement {
               </div>
             `)}
             ${this._filteredNotes().length === 0 ? html`
-              <div style="text-align:center;padding:20px;color:#4B5563;font-size:13px">
+              <div style="text-align:center;padding:20px;color:#666666;font-size:13px">
                 ${this.searchQuery ? "No matching notes" : "No notes yet"}
               </div>
             ` : nothing}

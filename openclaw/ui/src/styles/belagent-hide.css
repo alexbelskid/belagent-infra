@@ -15,3 +15,26 @@
 .sidebar-brand__eyebrow {
   display: none !important;
 }
+
+/* belagent: nav active item — dark red background */
+.nav-item.active,
+.nav-item--active {
+  background: #3D0A10 !important;
+  border-color: rgba(200, 0, 30, 0.3) !important;
+}
+.nav-item.active .nav-item__icon,
+.nav-item--active .nav-item__icon {
+  color: #C8001E !important;
+}
+
+.sidebar--collapsed .nav-item.active,
+.sidebar--collapsed .nav-item--active {
+  background: linear-gradient(180deg, #3D0A10 0%, #2A0710 100%) !important;
+  border-color: rgba(200, 0, 30, 0.25) !important;
+}
+
+/* belagent: version dot — red instead of green */
+.sidebar-version__status.sidebar-connection-status--online {
+  background: #C8001E !important;
+  box-shadow: 0 0 0 4px rgba(200, 0, 30, 0.14) !important;
+}

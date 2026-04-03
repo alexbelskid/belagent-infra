@@ -32,7 +32,7 @@ function colorForKind(kind: ActivityEvent["kind"]): string {
   switch (kind) {
     case "message": return "var(--c-accent, #C8001E)";
     case "cron": return "#eab308";
-    case "memory": return "#6B7280";
+    case "memory": return "#8A8A8A";
     case "connection": return "#22c55e";
     case "error": return "#ef4444";
     case "system": return "#6b7280";
