@@ -19,13 +19,16 @@
   "cards": [
     {
       "id": "0d2953564c43",
-      "columnId": "todo",
+      "columnId": "in-progress",
       "title": "Вытрясти деньги с карго",
       "description": "Вернуть деньги за отправку.",
       "assignee": "Лёша",
       "priority": "low",
       "createdAt": "2026-04-02T22:33:12.873Z",
-      "order": 0
+      "order": 0,
+      "deadline": null,
+      "tags": [],
+      "archived": false
     },
     {
       "id": "03171c6b0d7a",
@@ -35,7 +38,10 @@
       "assignee": "Лёша",
       "priority": "high",
       "createdAt": "2026-04-02T22:33:12.922Z",
-      "order": 0
+      "order": 1,
+      "deadline": null,
+      "tags": [],
+      "archived": false
     },
     {
       "id": "e17f36ddcd8e",
@@ -45,7 +51,10 @@
       "assignee": "Лёша",
       "priority": "high",
       "createdAt": "2026-04-02T22:33:12.978Z",
-      "order": 1
+      "order": 0,
+      "deadline": null,
+      "tags": [],
+      "archived": false
     },
     {
       "id": "9d49ddbeb94b",
@@ -55,7 +64,10 @@
       "assignee": "",
       "priority": "high",
       "createdAt": "2026-04-02T22:40:22.739Z",
-      "order": 2
+      "order": 1,
+      "deadline": null,
+      "tags": [],
+      "archived": false
     },
     {
       "id": "d2148f63dc81",
@@ -65,7 +77,10 @@
       "assignee": "Лёша",
       "priority": "high",
       "createdAt": "2026-04-02T22:40:22.807Z",
-      "order": 0
+      "order": 0,
+      "deadline": null,
+      "tags": [],
+      "archived": false
     },
     {
       "id": "a44458628db7",
@@ -75,7 +90,10 @@
       "assignee": "Лёша",
       "priority": "high",
       "createdAt": "2026-04-02T22:40:22.860Z",
-      "order": 3
+      "order": 2,
+      "deadline": null,
+      "tags": [],
+      "archived": false
     },
     {
       "id": "75a8455e6970",
@@ -85,7 +103,10 @@
       "assignee": "Лёша",
       "priority": "mid",
       "createdAt": "2026-04-02T22:40:35.445Z",
-      "order": 4
+      "order": 3,
+      "deadline": null,
+      "tags": [],
+      "archived": false
     },
     {
       "id": "8a8e06873735",
@@ -95,7 +116,10 @@
       "assignee": "вместе",
       "priority": "mid",
       "createdAt": "2026-04-02T22:40:35.750Z",
-      "order": 5
+      "order": 4,
+      "deadline": null,
+      "tags": [],
+      "archived": false
     },
     {
       "id": "548bb3fe529d",
@@ -105,7 +129,10 @@
       "assignee": "Лёша",
       "priority": "mid",
       "createdAt": "2026-04-02T22:40:35.810Z",
-      "order": 6
+      "order": 5,
+      "deadline": null,
+      "tags": [],
+      "archived": false
     },
     {
       "id": "42ab5c1e9a11",
@@ -115,7 +142,10 @@
       "assignee": "Лёша",
       "priority": "mid",
       "createdAt": "2026-04-02T22:40:35.916Z",
-      "order": 7
+      "order": 6,
+      "deadline": null,
+      "tags": [],
+      "archived": false
     },
     {
       "id": "15ede758b14a",
@@ -125,7 +155,11 @@
       "assignee": "вместе",
       "priority": "low",
       "createdAt": "2026-04-02T22:40:36.025Z",
-      "order": 1
+      "order": 2,
+      "deadline": null,
+      "tags": [],
+      "archived": false
     }
-  ]
+  ],
+  "archive": []
 }

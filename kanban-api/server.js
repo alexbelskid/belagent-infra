@@ -15,7 +15,21 @@ function uid() {
 
 function readBoard() {
   try {
-    return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+    const raw = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+    // Ensure archive array exists (migration)
+    if (!Array.isArray(raw.archive)) raw.archive = [];
+    // Ensure cards have new fields (migration)
+    for (const c of raw.cards) {
+      if (c.deadline === undefined) c.deadline = null;
+      if (!Array.isArray(c.tags)) c.tags = [];
+      if (c.archived === undefined) c.archived = false;
+    }
+    for (const c of raw.archive) {
+      if (c.deadline === undefined) c.deadline = null;
+      if (!Array.isArray(c.tags)) c.tags = [];
+      if (c.archived === undefined) c.archived = true;
+    }
+    return raw;
   } catch {
     const seed = {
       columns: [
@@ -24,6 +38,7 @@ function readBoard() {
         { id: "done",        title: "Done",          order: 2 },
       ],
       cards: [],
+      archive: [],
     };
     writeBoard(seed);
     return seed;
@@ -39,7 +54,7 @@ function json(res, status, body) {
   res.writeHead(status, {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   });
   res.end(JSON.stringify(body));
@@ -57,6 +72,11 @@ function parseBody(req) {
   });
 }
 
+function sanitizeTags(tags) {
+  if (!Array.isArray(tags)) return [];
+  return tags.map((t) => String(t).trim()).filter(Boolean).slice(0, 20);
+}
+
 // ── Routes ──────────────────────────────────────────────────────
 async function handleRequest(req, res) {
   const url = new URL(req.url, `http://localhost:${PORT}`);
@@ -68,9 +88,57 @@ async function handleRequest(req, res) {
     return json(res, 204, null);
   }
 
-  // GET /api/kanban — full board
+  // GET /api/kanban — full board (active cards only)
   if (method === "GET" && p === "/api/kanban") {
-    return json(res, 200, readBoard());
+    const board = readBoard();
+    return json(res, 200, {
+      columns: board.columns,
+      cards: board.cards.filter((c) => !c.archived),
+    });
+  }
+
+  // GET /api/kanban/archive — archived cards
+  if (method === "GET" && p === "/api/kanban/archive") {
+    const board = readBoard();
+    return json(res, 200, { cards: board.archive });
+  }
+
+  // POST /api/kanban/archive-done — archive all cards in "done" column
+  if (method === "POST" && p === "/api/kanban/archive-done") {
+    const board = readBoard();
+    const doneCol = board.columns.find((c) =>
+      c.title.toLowerCase() === "done" || c.id === "done"
+    );
+    if (!doneCol) return json(res, 400, { error: "no Done column found" });
+    const toArchive = board.cards.filter((c) => c.columnId === doneCol.id);
+    if (toArchive.length === 0) return json(res, 200, { archived: 0 });
+    for (const c of toArchive) {
+      c.archived = true;
+      c.archivedAt = new Date().toISOString();
+      board.archive.push(c);
+    }
+    board.cards = board.cards.filter((c) => c.columnId !== doneCol.id);
+    writeBoard(board);
+    return json(res, 200, { archived: toArchive.length });
+  }
+
+  // POST /api/kanban/archive/:id/restore — restore archived card
+  const restoreMatch = p.match(/^\/api\/kanban\/archive\/([^/]+)\/restore$/);
+  if (method === "POST" && restoreMatch) {
+    const board = readBoard();
+    const idx = board.archive.findIndex((c) => c.id === restoreMatch[1]);
+    if (idx === -1) return json(res, 404, { error: "archived card not found" });
+    const card = board.archive.splice(idx, 1)[0];
+    card.archived = false;
+    delete card.archivedAt;
+    // Put back in first column
+    const targetCol = board.columns[0];
+    card.columnId = targetCol ? targetCol.id : "todo";
+    const colCards = board.cards.filter((c) => c.columnId === card.columnId);
+    card.order = colCards.reduce((m, c) => Math.max(m, c.order), -1) + 1;
+    board.cards.push(card);
+    writeBoard(board);
+    return json(res, 200, card);
   }
 
   // POST /api/kanban/columns — add column
@@ -98,13 +166,12 @@ async function handleRequest(req, res) {
     return json(res, 200, col);
   }
 
-  // DELETE /api/kanban/columns/:id — delete column (cards in it get deleted too)
+  // DELETE /api/kanban/columns/:id
   const colDel = p.match(/^\/api\/kanban\/columns\/([^/]+)$/);
   if (method === "DELETE" && colDel) {
     const board = readBoard();
     const idx = board.columns.findIndex((c) => c.id === colDel[1]);
     if (idx === -1) return json(res, 404, { error: "column not found" });
-    // Prevent deleting the last column
     if (board.columns.length <= 1) {
       return json(res, 400, { error: "cannot delete last column" });
     }
@@ -132,15 +199,18 @@ async function handleRequest(req, res) {
       description: body.description || "",
       assignee: body.assignee || "",
       priority: ["low", "mid", "high"].includes(body.priority) ? body.priority : "mid",
+      deadline: body.deadline || null,
+      tags: sanitizeTags(body.tags),
       createdAt: new Date().toISOString(),
       order: maxOrder + 1,
+      archived: false,
     };
     board.cards.push(card);
     writeBoard(board);
     return json(res, 201, card);
   }
 
-  // PUT /api/kanban/cards/:id — update card (fields + move between columns)
+  // PUT /api/kanban/cards/:id — update card
   const cardPut = p.match(/^\/api\/kanban\/cards\/([^/]+)$/);
   if (method === "PUT" && cardPut) {
     const body = await parseBody(req);
@@ -153,6 +223,8 @@ async function handleRequest(req, res) {
     if (body.priority !== undefined && ["low", "mid", "high"].includes(body.priority)) {
       card.priority = body.priority;
     }
+    if (body.deadline !== undefined)    card.deadline = body.deadline || null;
+    if (body.tags !== undefined)        card.tags = sanitizeTags(body.tags);
     if (body.columnId !== undefined) {
       if (!board.columns.find((c) => c.id === body.columnId)) {
         return json(res, 400, { error: "invalid columnId" });
@@ -162,6 +234,47 @@ async function handleRequest(req, res) {
     if (body.order !== undefined) card.order = body.order;
     writeBoard(board);
     return json(res, 200, card);
+  }
+
+  // PATCH /api/kanban/cards/:id/status — move card to column (for agent use)
+  const statusPatch = p.match(/^\/api\/kanban\/cards\/([^/]+)\/status$/);
+  if (method === "PATCH" && statusPatch) {
+    const body = await parseBody(req);
+    if (!body.columnId) return json(res, 400, { error: "columnId required" });
+    const board = readBoard();
+    const card = board.cards.find((c) => c.id === statusPatch[1]);
+    if (!card) return json(res, 404, { error: "card not found" });
+    const targetCol = board.columns.find((c) => c.id === body.columnId);
+    if (!targetCol) return json(res, 400, { error: "invalid columnId" });
+    const oldCol = card.columnId;
+    card.columnId = body.columnId;
+    // Reorder target column
+    const targetCards = board.cards
+      .filter((c) => c.columnId === body.columnId)
+      .sort((a, b) => a.order - b.order);
+    targetCards.forEach((c, i) => { c.order = i; });
+    // Reorder old column
+    if (oldCol !== body.columnId) {
+      const oldCards = board.cards
+        .filter((c) => c.columnId === oldCol)
+        .sort((a, b) => a.order - b.order);
+      oldCards.forEach((c, i) => { c.order = i; });
+    }
+    writeBoard(board);
+    console.log(`[status] Card "${card.title}" moved to "${targetCol.title}"`);
+    return json(res, 200, card);
+  }
+
+  // POST /api/kanban/cards/:id/execute — send card to agent
+  const execMatch = p.match(/^\/api\/kanban\/cards\/([^/]+)\/execute$/);
+  if (method === "POST" && execMatch) {
+    const board = readBoard();
+    const card = board.cards.find((c) => c.id === execMatch[1]);
+    if (!card) return json(res, 404, { error: "card not found" });
+    console.log(`[execute] Card sent to agent: "${card.title}" (${card.id})`);
+    console.log(`  priority=${card.priority} assignee="${card.assignee}" tags=[${card.tags.join(",")}]`);
+    console.log(`  description: ${card.description || "(none)"}`);
+    return json(res, 200, { ok: true, message: "Sent to agent", card });
   }
 
   // DELETE /api/kanban/cards/:id
@@ -175,10 +288,9 @@ async function handleRequest(req, res) {
     return json(res, 200, { deleted: removed.id });
   }
 
-  // PUT /api/kanban/reorder — batch reorder cards after drag & drop
+  // PUT /api/kanban/reorder — drag & drop reorder
   if (method === "PUT" && p === "/api/kanban/reorder") {
     const body = await parseBody(req);
-    // body: { cardId, targetColumnId, targetIndex }
     if (!body.cardId || !body.targetColumnId) {
       return json(res, 400, { error: "cardId and targetColumnId required" });
     }
@@ -188,10 +300,8 @@ async function handleRequest(req, res) {
     if (!board.columns.find((c) => c.id === body.targetColumnId)) {
       return json(res, 400, { error: "invalid targetColumnId" });
     }
-    // Remove from old position
     const oldCol = card.columnId;
     card.columnId = body.targetColumnId;
-    // Reorder: get target column cards sorted
     const targetCards = board.cards
       .filter((c) => c.columnId === body.targetColumnId && c.id !== card.id)
       .sort((a, b) => a.order - b.order);
@@ -200,7 +310,6 @@ async function handleRequest(req, res) {
       : targetCards.length;
     targetCards.splice(insertAt, 0, card);
     targetCards.forEach((c, i) => { c.order = i; });
-    // Reorder old column if different
     if (oldCol !== body.targetColumnId) {
       const oldCards = board.cards
         .filter((c) => c.columnId === oldCol)
@@ -211,7 +320,6 @@ async function handleRequest(req, res) {
     return json(res, 200, readBoard());
   }
 
-  // 404 fallback
   json(res, 404, { error: "not found" });
 }
 
