@@ -127,6 +127,7 @@ const lazyActivityFeed = createLazy(() => import("./views/activity-feed.ts"));
 const lazyGraph = createLazy(() => import("./views/graph.ts"));
 const lazyConnections = createLazy(() => import("./views/connections.ts"));
 const lazyKanban = createLazy(() => import("./views/kanban.ts"));
+const lazyNotes = createLazy(() => import("./views/notes.ts"));
 const lazyChannels = createLazy(() => import("./views/channels.ts"));
 const lazyCron = createLazy(() => import("./views/cron.ts"));
 const lazyDebug = createLazy(() => import("./views/debug.ts"));
@@ -901,6 +902,11 @@ export function renderApp(state: AppViewState) {
         ${
           state.tab === "appflowy"
             ? lazyRender(lazyKanban, (m) => m.renderKanban())
+            : nothing}
+
+        ${
+          state.tab === "notes"
+            ? lazyRender(lazyNotes, (m) => m.renderNotes())
             : nothing}
 
         ${

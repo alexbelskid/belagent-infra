@@ -5,7 +5,7 @@ export const TAB_GROUPS = [
   { label: "chat", tabs: ["chat"] },
   {
     label: "belagent",
-    tabs: ["sessions", "cron", "graph", "skills", "appflowy"],
+    tabs: ["sessions", "cron", "graph", "skills", "appflowy", "notes"],
   },
   {
     label: "advanced",
@@ -28,6 +28,7 @@ export type Tab =
   | "activity"
   | "connections"
   | "appflowy"
+  | "notes"
   | "config"
   | "communications"
   | "appearance"
@@ -52,6 +53,7 @@ const TAB_PATHS: Record<Tab, string> = {
   activity: "/activity",
   connections: "/connections",
   appflowy: "/appflowy-view",
+  notes: "/notes",
   config: "/config",
   communications: "/communications",
   appearance: "/appearance",
@@ -165,6 +167,8 @@ export function iconForTab(tab: Tab): IconName {
       return "network";
     case "activity":
       return "barChart";
+    case "notes":
+      return "fileText";
     case "appflowy":
       return "grid";
     case "connections":
@@ -205,6 +209,7 @@ const BELAGENT_LABELS: Record<Tab, string> = {
   config: "Settings",
   logs: "Logs",
   appflowy: "Tasks",
+  notes: "Notes",
   agents: "Agents",
   overview: "Overview",
   channels: "Channels",

@@ -1,0 +1,15 @@
+{
+  "notes": [
+    {
+      "id": "33e57b4a400d",
+      "title": "Test note",
+      "icon": "",
+      "content": "Hello world",
+      "tags": [
+        "test"
+      ],
+      "createdAt": "2026-04-03T16:05:26.082Z",
+      "updatedAt": "2026-04-03T16:05:26.082Z"
+    }
+  ]
+}

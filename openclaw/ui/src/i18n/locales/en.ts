@@ -50,6 +50,7 @@ export const en: TranslationMap = {
     debug: "Debug",
     logs: "Logs",
     appflowy: "AppFlowy",
+    notes: "Notes",
   },
   subtitles: {
     agents: "Workspaces, tools, identities.",
@@ -71,6 +72,7 @@ export const en: TranslationMap = {
     debug: "Snapshots, events, RPC.",
     logs: "Live gateway logs.",
     appflowy: "Project management and tasks.",
+    notes: "Wiki, docs, and knowledge base.",
   },
   overview: {
     access: {
