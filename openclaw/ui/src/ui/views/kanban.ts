@@ -42,8 +42,8 @@ const PRIORITY_LABELS: Record<string, string> = { low: "Low", mid: "Mid", high: 
 const PRIORITY_ORDER: Record<string, number> = { high: 0, mid: 1, low: 2 };
 
 const TAG_PALETTE = [
-  "#7c3aed", "#2563eb", "#059669", "#d97706", "#dc2626",
-  "#db2777", "#4f46e5", "#0891b2", "#65a30d", "#ea580c",
+  "#C8001E", "#6B7280", "#B2CACB", "#4B5563", "#A0001A",
+  "#8CA3A4", "#374151", "#556B6C", "#9BA5AD", "#E00022",
 ];
 
 function tagColor(tag: string): string {
@@ -107,7 +107,7 @@ export class KanbanBoardView extends LitElement {
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
         "Helvetica Neue", Arial, sans-serif;
-      color: #c9d1d9;
+      color: #ECEEF4;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -116,7 +116,7 @@ export class KanbanBoardView extends LitElement {
       display: flex;
       flex-direction: column;
       height: 100%;
-      background: #0d1117;
+      background: #0B0F0B;
     }
 
     /* ── Header ── */
@@ -128,13 +128,13 @@ export class KanbanBoardView extends LitElement {
       gap: 16px;
       flex-shrink: 0;
       flex-wrap: wrap;
-      background: #0d1117;
+      background: #0B0F0B;
     }
     .header h2 {
       margin: 0;
       font-size: 17px;
       font-weight: 600;
-      color: #e6edf3;
+      color: #F5F6FA;
       letter-spacing: -0.01em;
       white-space: nowrap;
     }
@@ -150,25 +150,25 @@ export class KanbanBoardView extends LitElement {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 8px;
-      padding: 7px 12px;
-      color: #c9d1d9;
+      padding: 8px 12px;
+      color: #ECEEF4;
       font-size: 13px;
       font-family: inherit;
       outline: none;
-      min-width: 160px;
+      width: 200px; min-width: 200px;
       transition: border-color 0.2s, background 0.2s;
     }
     .t-input:focus {
-      border-color: rgba(124, 58, 237, 0.5);
+      border-color: rgba(200, 0, 30, 0.5);
       background: rgba(255, 255, 255, 0.06);
     }
-    .t-input::placeholder { color: #484f58; }
+    .t-input::placeholder { color: #4B5563; }
     .t-select {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 8px;
-      padding: 7px 10px;
-      color: #c9d1d9;
+      padding: 8px 12px;
+      color: #ECEEF4;
       font-size: 13px;
       font-family: inherit;
       outline: none;
@@ -188,15 +188,15 @@ export class KanbanBoardView extends LitElement {
       white-space: nowrap;
     }
     .btn-primary {
-      background: #7c3aed;
+      background: #C8001E;
       color: #fff;
-      padding: 7px 16px;
+      padding: 8px 14px;
     }
-    .btn-primary:hover { background: #6d28d9; }
+    .btn-primary:hover { background: #A0001A; }
     .btn-secondary {
       background: rgba(255, 255, 255, 0.06);
-      color: #c9d1d9;
-      padding: 7px 12px;
+      color: #ECEEF4;
+      padding: 8px 12px;
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
     .btn-secondary:hover {
@@ -204,26 +204,26 @@ export class KanbanBoardView extends LitElement {
       border-color: rgba(255, 255, 255, 0.14);
     }
     .btn-secondary.active {
-      background: rgba(124, 58, 237, 0.15);
-      color: #a78bfa;
-      border-color: rgba(124, 58, 237, 0.3);
+      background: rgba(200, 0, 30, 0.15);
+      color: #B2CACB;
+      border-color: rgba(200, 0, 30, 0.3);
     }
     .btn-ghost {
       background: transparent;
-      color: #484f58;
+      color: #4B5563;
       padding: 5px 8px;
     }
-    .btn-ghost:hover { color: #c9d1d9; background: rgba(255,255,255,0.06); }
-    .btn-danger { background: #da3633; color: #fff; padding: 8px 16px; }
-    .btn-danger:hover { background: #b62324; }
+    .btn-ghost:hover { color: #ECEEF4; background: rgba(255,255,255,0.06); }
+    .btn-danger { background: #C8001E; color: #fff; padding: 8px 16px; }
+    .btn-danger:hover { background: #A0001A; }
     .btn-amber {
-      background: rgba(210, 153, 34, 0.15);
-      color: #d29922;
-      padding: 7px 12px;
-      border: 1px solid rgba(210, 153, 34, 0.2);
+      background: rgba(178, 202, 203, 0.15);
+      color: #B2CACB;
+      padding: 8px 12px;
+      border: 1px solid rgba(178, 202, 203, 0.2);
     }
     .btn-amber:hover {
-      background: rgba(210, 153, 34, 0.25);
+      background: rgba(178, 202, 203, 0.25);
     }
     .btn-sm { font-size: 12px; padding: 4px 8px; border-radius: 6px; }
 
@@ -251,8 +251,8 @@ export class KanbanBoardView extends LitElement {
       transition: border-color 0.2s ease;
     }
     .col.drag-over {
-      border-color: rgba(124, 58, 237, 0.4);
-      background: rgba(124, 58, 237, 0.03);
+      border-color: rgba(200, 0, 30, 0.4);
+      background: rgba(200, 0, 30, 0.03);
     }
     .col-head {
       display: flex;
@@ -265,14 +265,14 @@ export class KanbanBoardView extends LitElement {
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: #8b949e;
+      color: #6B7280;
       display: flex;
       align-items: center;
       gap: 8px;
     }
     .col-count {
       background: rgba(255, 255, 255, 0.06);
-      color: #8b949e;
+      color: #6B7280;
       font-size: 11px;
       min-width: 20px;
       height: 20px;
@@ -295,7 +295,7 @@ export class KanbanBoardView extends LitElement {
       width: 100%;
       background: transparent;
       border: none;
-      color: #484f58;
+      color: #4B5563;
       padding: 8px 10px;
       border-radius: 8px;
       cursor: pointer;
@@ -305,13 +305,13 @@ export class KanbanBoardView extends LitElement {
       transition: color 0.15s, background 0.15s;
     }
     .add-card-btn:hover {
-      color: #c9d1d9;
+      color: #ECEEF4;
       background: rgba(255, 255, 255, 0.04);
     }
 
     /* ── Card ── */
     .card {
-      background: #161b22;
+      background: #121612;
       border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 10px;
       padding: 14px 16px;
@@ -341,7 +341,7 @@ export class KanbanBoardView extends LitElement {
     .card-title {
       font-size: 14px;
       font-weight: 500;
-      color: #e6edf3;
+      color: #F5F6FA;
       line-height: 1.45;
       flex: 1;
     }
@@ -357,7 +357,7 @@ export class KanbanBoardView extends LitElement {
     .card-action-btn {
       background: transparent;
       border: none;
-      color: #484f58;
+      color: #4B5563;
       cursor: pointer;
       padding: 4px 6px;
       border-radius: 6px;
@@ -365,15 +365,15 @@ export class KanbanBoardView extends LitElement {
       transition: color 0.12s, background 0.12s;
     }
     .card-action-btn:hover {
-      color: #c9d1d9;
+      color: #ECEEF4;
       background: rgba(255, 255, 255, 0.08);
     }
     .card-action-btn.archive-btn:hover {
-      color: #d29922;
+      color: #B2CACB;
     }
     .card-desc {
       font-size: 12px;
-      color: #8b949e;
+      color: #6B7280;
       margin-top: 6px;
       line-height: 1.45;
       display: -webkit-box;
@@ -409,7 +409,7 @@ export class KanbanBoardView extends LitElement {
       gap: 4px;
       font-size: 11px;
       font-weight: 500;
-      color: #8b949e;
+      color: #6B7280;
     }
     .priority-dot {
       width: 8px;
@@ -417,12 +417,12 @@ export class KanbanBoardView extends LitElement {
       border-radius: 50%;
       flex-shrink: 0;
     }
-    .priority-dot.high { background: #da3633; }
-    .priority-dot.mid { background: #d29922; }
-    .priority-dot.low { background: #3b82f6; }
+    .priority-dot.high { background: #C8001E; }
+    .priority-dot.mid { background: #B2CACB; }
+    .priority-dot.low { background: #B2CACB; }
     .card-assignee {
       font-size: 11px;
-      color: #a78bfa;
+      color: #B2CACB;
       font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
@@ -431,7 +431,7 @@ export class KanbanBoardView extends LitElement {
     }
     .card-date {
       font-size: 11px;
-      color: #484f58;
+      color: #4B5563;
       margin-left: auto;
     }
     .card-deadline {
@@ -443,13 +443,13 @@ export class KanbanBoardView extends LitElement {
       align-items: center;
       gap: 3px;
     }
-    .card-deadline.overdue { background: rgba(218, 54, 51, 0.15); color: #f85149; }
-    .card-deadline.soon { background: rgba(210, 153, 34, 0.15); color: #d29922; }
-    .card-deadline.ok { background: rgba(255, 255, 255, 0.04); color: #8b949e; }
+    .card-deadline.overdue { background: rgba(200, 0, 30, 0.15); color: #C8001E; }
+    .card-deadline.soon { background: rgba(178, 202, 203, 0.15); color: #B2CACB; }
+    .card-deadline.ok { background: rgba(255, 255, 255, 0.04); color: #6B7280; }
 
     .drop-zone {
       height: 3px;
-      background: #7c3aed;
+      background: #C8001E;
       border-radius: 2px;
       margin: 4px 6px;
       opacity: 0.7;
@@ -466,7 +466,7 @@ export class KanbanBoardView extends LitElement {
       background: transparent;
       border: 1px dashed rgba(255, 255, 255, 0.08);
       border-radius: 12px;
-      color: #484f58;
+      color: #4B5563;
       padding: 24px 20px;
       cursor: pointer;
       font-size: 14px;
@@ -475,8 +475,8 @@ export class KanbanBoardView extends LitElement {
       text-align: center;
     }
     .add-col-trigger:hover {
-      border-color: rgba(124, 58, 237, 0.3);
-      color: #a78bfa;
+      border-color: rgba(200, 0, 30, 0.3);
+      color: #B2CACB;
     }
     .add-col-form {
       background: rgba(255, 255, 255, 0.02);
@@ -492,14 +492,14 @@ export class KanbanBoardView extends LitElement {
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 8px;
       padding: 9px 12px;
-      color: #c9d1d9;
+      color: #ECEEF4;
       font-size: 13px;
       font-family: inherit;
       outline: none;
       width: 100%;
       box-sizing: border-box;
     }
-    .add-col-form input:focus { border-color: rgba(124, 58, 237, 0.5); }
+    .add-col-form input:focus { border-color: rgba(200, 0, 30, 0.5); }
 
     /* ── Modal ── */
     .overlay {
@@ -518,7 +518,7 @@ export class KanbanBoardView extends LitElement {
       to { opacity: 1; }
     }
     .modal {
-      background: #161b22;
+      background: #121612;
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px;
       padding: 28px;
@@ -537,7 +537,7 @@ export class KanbanBoardView extends LitElement {
       margin: 0 0 24px;
       font-size: 17px;
       font-weight: 600;
-      color: #e6edf3;
+      color: #F5F6FA;
       letter-spacing: -0.01em;
     }
     .fg { margin-bottom: 16px; }
@@ -545,7 +545,7 @@ export class KanbanBoardView extends LitElement {
       display: block;
       font-size: 12px;
       font-weight: 500;
-      color: #8b949e;
+      color: #6B7280;
       margin-bottom: 6px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -556,7 +556,7 @@ export class KanbanBoardView extends LitElement {
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 8px;
       padding: 10px 14px;
-      color: #c9d1d9;
+      color: #ECEEF4;
       font-size: 13px;
       font-family: inherit;
       outline: none;
@@ -564,11 +564,11 @@ export class KanbanBoardView extends LitElement {
       box-sizing: border-box;
     }
     .fg input:focus, .fg textarea:focus, .fg select:focus {
-      border-color: rgba(124, 58, 237, 0.5);
+      border-color: rgba(200, 0, 30, 0.5);
     }
     .fg textarea { resize: vertical; min-height: 80px; }
     .fg select { cursor: pointer; }
-    .fg .hint { font-size: 11px; color: #484f58; margin-top: 4px; }
+    .fg .hint { font-size: 11px; color: #4B5563; margin-top: 4px; }
     .modal-footer {
       display: flex;
       justify-content: flex-end;
@@ -578,7 +578,7 @@ export class KanbanBoardView extends LitElement {
 
     /* ── Confirm dialog ── */
     .confirm {
-      background: #161b22;
+      background: #121612;
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 14px;
       padding: 28px;
@@ -587,7 +587,7 @@ export class KanbanBoardView extends LitElement {
       box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
     }
     .confirm p {
-      color: #c9d1d9;
+      color: #ECEEF4;
       font-size: 14px;
       margin: 0 0 20px;
       line-height: 1.5;
@@ -603,7 +603,7 @@ export class KanbanBoardView extends LitElement {
       display: flex;
       flex-direction: column;
       height: 100%;
-      background: #0d1117;
+      background: #0B0F0B;
     }
     .archive-head {
       display: flex;
@@ -616,7 +616,7 @@ export class KanbanBoardView extends LitElement {
       margin: 0;
       font-size: 17px;
       font-weight: 600;
-      color: #e6edf3;
+      color: #F5F6FA;
     }
     .archive-grid {
       padding: 24px 28px;
@@ -628,7 +628,7 @@ export class KanbanBoardView extends LitElement {
       align-content: start;
     }
     .archive-card {
-      background: #161b22;
+      background: #121612;
       border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 10px;
       padding: 16px;
@@ -639,11 +639,11 @@ export class KanbanBoardView extends LitElement {
       position: fixed;
       bottom: 28px;
       right: 28px;
-      background: #161b22;
-      border: 1px solid rgba(124, 58, 237, 0.3);
+      background: #121612;
+      border: 1px solid rgba(200, 0, 30, 0.3);
       border-radius: 12px;
       padding: 14px 22px;
-      color: #c9d1d9;
+      color: #ECEEF4;
       font-size: 13px;
       z-index: 10001;
       box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
@@ -659,7 +659,7 @@ export class KanbanBoardView extends LitElement {
       align-items: center;
       justify-content: center;
       height: 100%;
-      color: #484f58;
+      color: #4B5563;
       font-size: 14px;
     }
 
@@ -783,9 +783,7 @@ export class KanbanBoardView extends LitElement {
     this.confirmArchiveCardId = null;
 
     try {
-      // Move to done first, then archive; or just use PUT to set archived flag
-      // Simpler: delete from active board, rely on server to archive
-      const res = await fetch(`${API}/cards/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API}/cards/${id}/archive`, { method: "POST" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       if (card) this._showToast(`Archived "${card.title}"`);
     } catch (e) {
@@ -1000,7 +998,7 @@ export class KanbanBoardView extends LitElement {
             <h2>Tasks</h2>
             <button class="btn btn-secondary" @click=${() => { this.error = null; this._loadBoard(); }}>Retry</button>
           </div>
-          <div class="center-msg" style="color:#f85149">${this.error}</div>
+          <div class="center-msg" style="color:#C8001E">${this.error}</div>
         </div>`;
     }
 
@@ -1232,7 +1230,7 @@ export class KanbanBoardView extends LitElement {
     return html`
       <div class="overlay" @click=${(e: Event) => { if (e.target === e.currentTarget) this.confirmArchiveCardId = null; }}>
         <div class="confirm">
-          <p>Archive "${card?.title}"?<br/><span style="color:#8b949e;font-size:12px">You can restore it later from the archive.</span></p>
+          <p>Archive "${card?.title}"?<br/><span style="color:#6B7280;font-size:12px">You can restore it later from the archive.</span></p>
           <div class="confirm-btns">
             <button class="btn btn-secondary" @click=${() => { this.confirmArchiveCardId = null; }}>Cancel</button>
             <button class="btn btn-amber" @click=${() => this._archiveCard(this.confirmArchiveCardId!)}>Archive</button>
@@ -1247,7 +1245,7 @@ export class KanbanBoardView extends LitElement {
     return html`
       <div class="overlay" @click=${(e: Event) => { if (e.target === e.currentTarget) this.confirmDeleteColumnId = null; }}>
         <div class="confirm">
-          <p>Delete column "${col?.title}"?${count > 0 ? html`<br/><span style="color:#f85149">${count} task${count > 1 ? "s" : ""} will be permanently deleted.</span>` : nothing}</p>
+          <p>Delete column "${col?.title}"?${count > 0 ? html`<br/><span style="color:#C8001E">${count} task${count > 1 ? "s" : ""} will be permanently deleted.</span>` : nothing}</p>
           <div class="confirm-btns">
             <button class="btn btn-secondary" @click=${() => { this.confirmDeleteColumnId = null; }}>Cancel</button>
             <button class="btn btn-danger" @click=${() => this._deleteColumn(this.confirmDeleteColumnId!)}>Delete</button>
@@ -1269,7 +1267,7 @@ export class KanbanBoardView extends LitElement {
             <div class="archive-grid">
               ${this.archivedCards.map((card) => html`
                 <div class="archive-card">
-                  <div class="card-title" style="color:#e6edf3;margin-bottom:6px">${card.title}</div>
+                  <div class="card-title" style="color:#F5F6FA;margin-bottom:6px">${card.title}</div>
                   ${card.description ? html`<div class="card-desc">${card.description}</div>` : nothing}
                   ${(card.tags || []).length > 0 ? html`
                     <div class="card-tags" style="margin-top:8px">

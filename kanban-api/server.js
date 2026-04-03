@@ -207,6 +207,20 @@ async function handleRequest(req, res) {
     return json(res, 200, card);
   }
 
+  // Archive a single card
+  const archiveMatch = p.match(/^\/api\/kanban\/cards\/([^/]+)\/archive$/);
+  if (method === "POST" && archiveMatch) {
+    const board = readBoard();
+    const idx = board.cards.findIndex((c) => c.id === archiveMatch[1]);
+    if (idx === -1) return json(res, 404, { error: "not found" });
+    const card = board.cards.splice(idx, 1)[0];
+    card.archived = true;
+    card.archivedAt = new Date().toISOString();
+    board.archive.push(card);
+    writeBoard(board);
+    return json(res, 200, card);
+  }
+
   const execMatch = p.match(/^\/api\/kanban\/cards\/([^/]+)\/execute$/);
   if (method === "POST" && execMatch) {
     const board = readBoard();

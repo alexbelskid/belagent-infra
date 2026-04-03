@@ -30,13 +30,13 @@ function iconForKind(kind: ActivityEvent["kind"]): string {
 
 function colorForKind(kind: ActivityEvent["kind"]): string {
   switch (kind) {
-    case "message": return "var(--c-accent, #6366f1)";
+    case "message": return "var(--c-accent, #C8001E)";
     case "cron": return "#eab308";
-    case "memory": return "#8b5cf6";
+    case "memory": return "#6B7280";
     case "connection": return "#22c55e";
     case "error": return "#ef4444";
     case "system": return "#6b7280";
-    default: return "var(--c-accent, #6366f1)";
+    default: return "var(--c-accent, #C8001E)";
   }
 }
 
@@ -121,7 +121,7 @@ export function renderActivityFeed(props: ActivityFeedProps) {
           color: var(--c-text, inherit);
           transition: border-color 0.15s;
         }
-        .af-refresh:hover { border-color: var(--c-accent, #6366f1); }
+        .af-refresh:hover { border-color: var(--c-accent, #C8001E); }
 
         .af-stats {
           display: grid;

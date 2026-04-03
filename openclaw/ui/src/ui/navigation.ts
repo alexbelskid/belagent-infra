@@ -5,11 +5,11 @@ export const TAB_GROUPS = [
   { label: "chat", tabs: ["chat"] },
   {
     label: "belagent",
-    tabs: ["sessions", "cron", "graph", "skills", "appflowy", "notes"],
+    tabs: ["cron", "skills", "appflowy", "notes", "connections"],
   },
   {
     label: "advanced",
-    tabs: ["usage", "connections", "config", "logs"],
+    tabs: ["sessions", "graph", "usage", "config", "logs"],
   },
 ] as const;
 

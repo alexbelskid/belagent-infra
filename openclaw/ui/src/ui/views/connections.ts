@@ -75,7 +75,7 @@ export function renderConnections(props: ConnectionsProps) {
         .conn-card.connected {
           border-color: rgba(34, 197, 94, 0.3);
         }
-        .conn-card:hover { border-color: var(--c-accent, #6366f1); }
+        .conn-card:hover { border-color: var(--c-accent, #C8001E); }
 
         .conn-top {
           display: flex;
@@ -122,10 +122,10 @@ export function renderConnections(props: ConnectionsProps) {
           color: var(--c-text, inherit);
           transition: all 0.15s;
         }
-        .conn-btn:hover { border-color: var(--c-accent, #6366f1); color: var(--c-accent, #6366f1); }
+        .conn-btn:hover { border-color: var(--c-accent, #C8001E); color: var(--c-accent, #C8001E); }
         .conn-btn.primary {
-          background: var(--c-accent, #6366f1);
-          border-color: var(--c-accent, #6366f1);
+          background: var(--c-accent, #C8001E);
+          border-color: var(--c-accent, #C8001E);
           color: white;
         }
         .conn-btn.primary:hover { opacity: 0.9; }
