@@ -18,24 +18,114 @@
   ],
   "cards": [
     {
-      "id": "231ea8834294",
-      "columnId": "done",
-      "title": "Test kanban card",
-      "description": "Verifying drag & drop",
-      "assignee": "Alex",
-      "priority": "high",
-      "createdAt": "2026-04-02T21:36:46.637Z",
+      "id": "0d2953564c43",
+      "columnId": "todo",
+      "title": "Вытрясти деньги с карго",
+      "description": "Вернуть деньги за отправку.",
+      "assignee": "Лёша",
+      "priority": "low",
+      "createdAt": "2026-04-02T22:33:12.873Z",
       "order": 0
     },
     {
-      "id": "285ad840acf3",
-      "columnId": "todo",
-      "title": "dd",
-      "description": "ssd",
-      "assignee": "ss",
+      "id": "03171c6b0d7a",
+      "columnId": "in-progress",
+      "title": "CCS CLIProxy с GUI",
+      "description": "SOCKS5 + CLIProxy :8319 настроен. Блокер: нет Claude Max авторизации. Нужно scp ~/.ccs с PC.",
+      "assignee": "Лёша",
       "priority": "high",
-      "createdAt": "2026-04-02T22:06:11.047Z",
+      "createdAt": "2026-04-02T22:33:12.922Z",
       "order": 0
+    },
+    {
+      "id": "e17f36ddcd8e",
+      "columnId": "todo",
+      "title": "Сводная таблица подписок",
+      "description": "Учёт финансов по ботам: кто, когда, сколько заплатил.",
+      "assignee": "Лёша",
+      "priority": "high",
+      "createdAt": "2026-04-02T22:33:12.978Z",
+      "order": 1
+    },
+    {
+      "id": "9d49ddbeb94b",
+      "columnId": "todo",
+      "title": "Подготовить демо-стенд с песочницей для руководителей",
+      "description": "Категория: Продукт",
+      "assignee": "",
+      "priority": "high",
+      "createdAt": "2026-04-02T22:40:22.739Z",
+      "order": 2
+    },
+    {
+      "id": "d2148f63dc81",
+      "columnId": "done",
+      "title": "Написать onboarding-инструкцию для участников бета-теста",
+      "description": "Категория: Партнёры",
+      "assignee": "Лёша",
+      "priority": "high",
+      "createdAt": "2026-04-02T22:40:22.807Z",
+      "order": 0
+    },
+    {
+      "id": "a44458628db7",
+      "columnId": "todo",
+      "title": "Описать модель безопасности: кто видит чьи данные",
+      "description": "Категория: Продукт",
+      "assignee": "Лёша",
+      "priority": "high",
+      "createdAt": "2026-04-02T22:40:22.860Z",
+      "order": 3
+    },
+    {
+      "id": "75a8455e6970",
+      "columnId": "todo",
+      "title": "Настроить форму сбора обратной связи от бета-пользователей",
+      "description": "Категория: Продукт",
+      "assignee": "Лёша",
+      "priority": "mid",
+      "createdAt": "2026-04-02T22:40:35.445Z",
+      "order": 4
+    },
+    {
+      "id": "8a8e06873735",
+      "columnId": "todo",
+      "title": "Подготовить pitch deck для Альтерини (5-7 слайдов)",
+      "description": "Категория: Партнёры",
+      "assignee": "вместе",
+      "priority": "mid",
+      "createdAt": "2026-04-02T22:40:35.750Z",
+      "order": 5
+    },
+    {
+      "id": "548bb3fe529d",
+      "columnId": "todo",
+      "title": "Нарисовать архитектуру продукта",
+      "description": "Категория: Продукт",
+      "assignee": "Лёша",
+      "priority": "mid",
+      "createdAt": "2026-04-02T22:40:35.810Z",
+      "order": 6
+    },
+    {
+      "id": "42ab5c1e9a11",
+      "columnId": "todo",
+      "title": "Настроить мониторинг ошибок и алертинг для бета-периода",
+      "description": "Категория: Продукт",
+      "assignee": "Лёша",
+      "priority": "mid",
+      "createdAt": "2026-04-02T22:40:35.916Z",
+      "order": 7
+    },
+    {
+      "id": "15ede758b14a",
+      "columnId": "in-progress",
+      "title": "Придумать название продукта и нарисовать лого",
+      "description": "Категория: Дизайн",
+      "assignee": "вместе",
+      "priority": "low",
+      "createdAt": "2026-04-02T22:40:36.025Z",
+      "order": 1
     }
   ]
 }
